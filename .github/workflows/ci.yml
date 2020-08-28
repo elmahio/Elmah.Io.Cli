@@ -31,12 +31,12 @@ jobs:
     - name: Build osx-x64
       run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
 
-    - name: zip
+    - name: Pack
       shell: bash
       run: |
-        7z a -tzip "./artifacts/elmahio-win-x64.zip" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/win-x64/publish/*"
-        tar czvf "./artifacts/elmahio-linux-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/linux-x64/publish"
-        tar czvf "./artifacts/elmahio-osx-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/osx-x64/publish"
+        7z a -tzip "./artifacts/elmahio-win-x64.zip" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/win-x64/publish/"
+        7z a -ttar "./artifacts/elmahio-linux-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/linux-x64/publish/"
+        7z a -ttar "./artifacts/elmahio-osx-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/osx-x64/publish/"
 
     - name: Create the Release
       id: create_release
