@@ -36,22 +36,17 @@ jobs:
       run: |
         release_name="elmahio-${{ matrix.target }}"
         dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime "${{ matrix.target }}" -o "$release_name"
-        if [ "${{ matrix.target }}" == "win-x64" ]; then
-          7z a -tzip "${release_name}.zip" "./${release_name}/*"
-        else
-          tar czvf "${release_name}.tar.gz" "$release_name"
-        fi
-
-        rm -r "$release_name"
         
     - name: Upload win Build Artifact
+      if: ${{ matrix.target }} == "win-x64"
       uses: actions/upload-artifact@v2.1.4
       with:
         name: "elmahio-${{ matrix.target }}.zip"
-        path: "./elmahio-*.zip"
+        path: "./elmahio-${{ matrix.target }}/*"
 
-    - name: Upload linux/osx Build Artifact
+    - name: Upload win Build Artifact
+      if: ${{ matrix.target }} != "win-x64"
       uses: actions/upload-artifact@v2.1.4
       with:
         name: "elmahio-${{ matrix.target }}.tar.gz"
-        path: "./elmahio-*.tar.gz"
+        path: "./elmahio-${{ matrix.target }}/*"
