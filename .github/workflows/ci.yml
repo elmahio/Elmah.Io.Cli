@@ -43,3 +43,8 @@ jobs:
         fi
 
         rm -r "$release_name"
+        
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.1.4
+      with:
+        path: "./elmahio-*"
