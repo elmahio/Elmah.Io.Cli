@@ -8,45 +8,25 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        kind: ['linux', 'windows', 'macOS']
-        include:
-          - kind: linux
-            os: ubuntu-latest
-            target: linux-x64
-          - kind: windows
-            os: windows-latest
-            target: win-x64
-          - kind: macOS
-            os: macos-latest
-            target: osx-x64
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     
     steps:
+    - name: Checkout repository
     - uses: actions/checkout@v2
+      
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.301
+
     - name: Install dependencies
       run: dotnet restore
-    - name: Build
-      shell: bash
-      run: |
-        release_name="elmahio-${{ matrix.target }}"
-        dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime "${{ matrix.target }}" -o "$release_name"
-        
-    - name: Upload win Build Artifact
-      if: ${{ matrix.target }} == "win-x64"
-      uses: actions/upload-artifact@v2.1.4
-      with:
-        name: "elmahio-${{ matrix.target }}.zip"
-        path: "./elmahio-${{ matrix.target }}/*"
 
-    - name: Upload win Build Artifact
-      if: ${{ matrix.target }} != "win-x64"
-      uses: actions/upload-artifact@v2.1.4
-      with:
-        name: "elmahio-${{ matrix.target }}.tar.gz"
-        path: "./elmahio-${{ matrix.target }}/*"
+    - name: Build win-x64
+      run: dotnet publish src/Elmah.Io.Cli.Elmah.Io.Cli.csproj -c Release --runtime win-x64
+      
+    - name: Build linux-x64
+      run: dotnet publish src/Elmah.Io.Cli.Elmah.Io.Cli.csproj -c Release --runtime linux-x64
+      
+    - name: Build osx-x64
+      run: dotnet publish src/Elmah.Io.Cli.Elmah.Io.Cli.csproj -c Release --runtime osx-x64
