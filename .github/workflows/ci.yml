@@ -8,9 +8,22 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        kind: ['linux', 'windows', 'maxOS']
+        include:
+          - kind: linux
+            os: ubuntu-latest
+            target: linux-x64
+          - kind: windows
+            os: windows-latest
+            target: winn-x64
+          - kind: macOS
+            os: macos-latest
+            target: osx-x64
+            
+    runs-on: ${{ matrix.os }}
+    
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET Core
@@ -20,4 +33,15 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      shell: bash
+      run: |
+        tag=$(git describe --tags --abbrev=0)
+        release_name="App-$tag-${{ matrix.target }}"
+        dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime "${{ matrix.target }}" -o "$release_name"
+        if [ "${{ matrix.target }}" == "win-x64" ]; then
+          7z a -tzip "${release_name}.zip" "./${release_name}/*"
+        else
+          tar czvf "${release_name}.tar.gz" "$release_name"
+        fi
+
+        rm -r "$release_name"
