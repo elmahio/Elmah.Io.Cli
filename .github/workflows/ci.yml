@@ -23,20 +23,23 @@ jobs:
       run: dotnet restore
 
     - name: Build win-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 -o elmahio-win-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
       
     - name: Build linux-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime linux-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime linux-x64 -o elmahio-linux-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
       
     - name: Build osx-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-x64 -o elmahio-osx-x64 /p:AssemblyVersion=3.0.${{ github.run_number }}
 
     - name: Pack
       shell: bash
       run: |
-        7z a -tzip "./artifacts/elmahio-win-x64.zip" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/win-x64/publish/*"
-        7z a -ttar "./artifacts/elmahio-linux-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/linux-x64/publish/*"
-        7z a -ttar "./artifacts/elmahio-osx-x64.tar.gz" "src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/osx-x64/publish/*"
+        7z a -tzip "./artifacts/elmahio-win-x64.zip" "./elmahio-win-x64/*"
+        tar czvf "./artifacts/elmahio-linux-x64.tar.gz" "elmahio-linux-x64"
+        tar czvf "./artifacts/elmahio-osx-x64.tar.gz" "elmahio-osx-x64"
+        rm -r "elmahio-win-x64"
+        rm -r "elmahio-linux-x64"
+        rm -r "elmahio-osx-x64"
 
     - name: Create the Release
       id: create_release
