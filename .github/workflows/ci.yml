@@ -35,5 +35,5 @@ jobs:
       shell: bash
       run: |
         7z a -tzip "./artifacts/elmahio-win-x64.zip" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/win-x64/publish/*"
-        tar czvf "./artifacts/elmahio-linux-x64.tar.gz" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/linux-x64/publish/*"
-        tar czvf "./artifacts/elmahio-osx-x64.tar.gz" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/osx-x64/publish/*"
+        tar czvf "./artifacts/elmahio-linux-x64.tar.gz" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/linux-x64/publish"
+        tar czvf "./artifacts/elmahio-osx-x64.tar.gz" "./src/Elmah.Io.Cli/bin/Release/netcoreapp3.1/osx-x64/publish"
