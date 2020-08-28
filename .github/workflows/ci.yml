@@ -34,7 +34,6 @@ jobs:
     - name: Build
       shell: bash
       run: |
-        tag=$(git describe --tags --abbrev=0)
         release_name="elmahio-${{ matrix.target }}"
         dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime "${{ matrix.target }}" -o "$release_name"
         if [ "${{ matrix.target }}" == "win-x64" ]; then
