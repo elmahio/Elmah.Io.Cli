@@ -44,7 +44,14 @@ jobs:
 
         rm -r "$release_name"
         
-    - name: Upload a Build Artifact
+    - name: Upload win Build Artifact
       uses: actions/upload-artifact@v2.1.4
       with:
-        path: "./elmahio-*"
+        name: "elmahio-${{ matrix.target }}.zip"
+        path: "./elmahio-*.zip"
+
+    - name: Upload linux/osx Build Artifact
+      uses: actions/upload-artifact@v2.1.4
+      with:
+        name: "elmahio-${{ matrix.target }}.tar.gz"
+        path: "./elmahio-*.tar.gz"
