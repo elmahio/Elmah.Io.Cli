@@ -9,7 +9,7 @@
     <ApplicationIcon>..\..\logo.ico</ApplicationIcon>
     <!-- .NET Core tool -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>elmahio</ToolCommandName>
+    <ToolCommandName>elmahio.cli</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
