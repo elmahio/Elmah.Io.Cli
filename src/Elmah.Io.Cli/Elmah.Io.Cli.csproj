@@ -7,9 +7,20 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     <Platforms>x64</Platforms>
     <ApplicationIcon>..\..\logo.ico</ApplicationIcon>
+    <!-- NuGet package -->
+    <Description>A CLI to execute common tasks against elmah.io.</Description>
+    <Authors>elmah.io</Authors>
+    <PackageId>elmahio.cli</PackageId>
+    <PackageTags>Error;Exception;Reporting;Management;Logging;ELMAH;Diagnostics;Tracing</PackageTags>
+    <PackageIconUrl>https://secure.gravatar.com/avatar/5c4cb3646528821117abde6d2d5ee22d?s=64</PackageIconUrl>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageProjectUrl>https://elmah.io</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/elmahio/Elmah.Io.Cli</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <!-- .NET Core tool -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>elmahio.cli</ToolCommandName>
+    <ToolCommandName>elmahio</ToolCommandName>
     <PackageOutputPath>./nupkg</PackageOutputPath>
   </PropertyGroup>
 
