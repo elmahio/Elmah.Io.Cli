@@ -15,6 +15,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(ExportCommand.Create());
             rootCommand.AddCommand(LogCommand.Create());
             rootCommand.AddCommand(TailCommand.Create());
+            rootCommand.AddCommand(DataloaderCommand.Create());
 
             return rootCommand.InvokeAsync(args).Result;
         }
