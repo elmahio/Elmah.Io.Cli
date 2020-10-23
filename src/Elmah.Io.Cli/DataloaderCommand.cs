@@ -43,13 +43,15 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
                         //Application = "Elmah.Io.DataLoader",
                         Cookies = new[]
                         {
-                            new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh")
+                            new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
+                            new Item("_ga", "GA1.3.1580453215.1783132008"),
                         },
                         DateTime = yesterday.AddMinutes(random.Next(1440)),
                         Detail = DotNetStackTrace,
                         Form = new[]
                         {
-                            new Item("Username", "ThomasArdal")
+                            new Item ("Username", "Joshua"),
+                            new Item ("Password", "********"),
                         },
                         QueryString = new[]
                         {
@@ -57,26 +59,37 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
                         },
                         ServerVariables = new[]
                         {
+                            new Item("REMOTE_ADDR", "1.1.1.1"),
                             new Item("CERT_KEYSIZE", "256"),
                             new Item("CONTENT_LENGTH", "0"),
                             new Item("QUERY_STRING", "logid=" + logId),
-                            new Item("REQUEST_METHOD", "POST"),
-                            new Item("HTTP_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36")
+                            new Item("REQUEST_METHOD", Method(r)),
+                            new Item("HTTP_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"),
+                            new Item("HTTP_CF_IPCOUNTRY", "AU"),
                         },
                         Hostname = "Web01",
-                        Severity = Error(r),
-                        Source = "Elmah.Io.DataLoader.exe",
+                        Severity = Severity(r),
+                        Source = "Elmah.Io.Cli.exe",
                         StatusCode = StatusCode(r),
                         Title = Title(r),
                         Type = Type(r),
                         Url = Url(r),
+                        Method = Method(r),
                         User = User(r),
                         Version = "1.1.0",
+                        Application = "Dataloader",
                     });
                 }
             });
 
             return dataloaderCommand;
+        }
+
+        private static string Method(double random)
+        {
+            if (random > 0.5) return "POST";
+            if (random > 0.2) return "GET";
+            return null;
         }
 
         private static string Url(double random)
@@ -108,7 +121,7 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
             return null;
         }
 
-        private static string Error(double random)
+        private static string Severity(double random)
         {
             if (random > 0.5) return "Error";
             if (random > 0.2) return "Warning";
