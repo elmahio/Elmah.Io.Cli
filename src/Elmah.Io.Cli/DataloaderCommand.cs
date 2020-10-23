@@ -29,7 +29,7 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
                     IsRequired = true
                 }
             };
-            dataloaderCommand.Description = "Load a configurable number of error messages into an elmah.io log";
+            dataloaderCommand.Description = "Load 50 log messages into the specified log";
             dataloaderCommand.Handler = CommandHandler.Create<string, Guid>((apiKey, logId) =>
             {
                 var api = new ElmahioAPI(new ApiKeyCredentials(apiKey));
