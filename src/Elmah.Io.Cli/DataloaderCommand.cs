@@ -1,5 +1,6 @@
 ﻿using Elmah.Io.Client;
 using Elmah.Io.Client.Models;
+using ShellProgressBar;
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -35,30 +36,40 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
                 var api = new ElmahioAPI(new ApiKeyCredentials(apiKey));
                 var random = new Random();
                 var yesterday = DateTime.UtcNow.AddDays(-1);
-                for (var i = 0; i < 50; i++)
+                var options = new ProgressBarOptions
                 {
-                    var r = random.NextDouble();
-                    api.Messages.CreateAndNotify(logId, new CreateMessage
+                    ProgressCharacter = '=',
+                    ProgressBarOnBottom = false,
+                    ForegroundColorDone = ConsoleColor.Green,
+                    ForegroundColor = ConsoleColor.White
+                };
+                var numberOfMessages = 50;
+                using (var pbar = new ProgressBar(numberOfMessages, "Loading log messages", options))
+                {
+                    for (var i = 0; i < numberOfMessages; i++)
                     {
-                        //Application = "Elmah.Io.DataLoader",
-                        Cookies = new[]
+                        var r = random.NextDouble();
+                        api.Messages.CreateAndNotify(logId, new CreateMessage
                         {
+                            //Application = "Elmah.Io.DataLoader",
+                            Cookies = new[]
+                            {
                             new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
                             new Item("_ga", "GA1.3.1580453215.1783132008"),
                         },
-                        DateTime = yesterday.AddMinutes(random.Next(1440)),
-                        Detail = DotNetStackTrace,
-                        Form = new[]
-                        {
+                            DateTime = yesterday.AddMinutes(random.Next(1440)),
+                            Detail = DotNetStackTrace,
+                            Form = new[]
+                            {
                             new Item ("Username", "Joshua"),
                             new Item ("Password", "********"),
                         },
-                        QueryString = new[]
-                        {
+                            QueryString = new[]
+                            {
                             new Item("logid", logId.ToString())
                         },
-                        ServerVariables = new[]
-                        {
+                            ServerVariables = new[]
+                            {
                             new Item("REMOTE_ADDR", "1.1.1.1"),
                             new Item("CERT_KEYSIZE", "256"),
                             new Item("CONTENT_LENGTH", "0"),
@@ -67,18 +78,20 @@ mah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\S
                             new Item("HTTP_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"),
                             new Item("HTTP_CF_IPCOUNTRY", "AU"),
                         },
-                        Hostname = "Web01",
-                        Severity = Severity(r),
-                        Source = "Elmah.Io.Cli.exe",
-                        StatusCode = StatusCode(r),
-                        Title = Title(r),
-                        Type = Type(r),
-                        Url = Url(r),
-                        Method = Method(r),
-                        User = User(r),
-                        Version = "1.1.0",
-                        Application = "Dataloader",
-                    });
+                            Hostname = "Web01",
+                            Severity = Severity(r),
+                            Source = "Elmah.Io.Cli.exe",
+                            StatusCode = StatusCode(r),
+                            Title = Title(r),
+                            Type = Type(r),
+                            Url = Url(r),
+                            Method = Method(r),
+                            User = User(r),
+                            Version = "1.1.0",
+                            Application = "Dataloader",
+                        });
+                        pbar.Tick();
+                    }
                 }
             });
 
