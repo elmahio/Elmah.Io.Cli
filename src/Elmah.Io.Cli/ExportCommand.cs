@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ShellProgressBar;
+using Spectre.Console;
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -47,14 +48,14 @@ namespace Elmah.Io.Cli
                 var startResult = api.Messages.GetAll(logId.ToString(), 0, 1, query, dateFrom, dateTo, includeHeaders);
                 if (startResult == null)
                 {
-                    Console.WriteLine("Could not find any messages for this API key and log ID combination");
+                    AnsiConsole.MarkupLine("[#ffc936]Could not find any messages for this API key and log ID combination[/]");
                 }
                 else
                 {
                     int messSum = startResult.Total.Value;
                     if (messSum > 10000)
                     {
-                        Console.WriteLine("Query returned more than 10,000 messages. The exporter will cap at 10,000 messages. Consider using the -DateFrom, -DateTo, and/or the -Query parameters to limit the search result.");
+                        AnsiConsole.MarkupLine("[#ffc936]Query returned more than 10,000 messages. The exporter will cap at 10,000 messages. Consider using the -DateFrom, -DateTo, and/or the -Query parameters to limit the search result.[/]");
                         messSum = 10000;
                     }
 

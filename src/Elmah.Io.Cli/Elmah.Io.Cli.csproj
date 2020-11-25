@@ -27,11 +27,12 @@
   <ItemGroup>
     <PackageReference Include="Elmah.Io.Client" Version="3.9.90" />
     <PackageReference Include="ShellProgressBar" Version="5.0.0" />
+    <PackageReference Include="Spectre.Console" Version="0.31.0" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.20371.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="images\icon.png" Pack="true" PackagePath="\"/>
+    <None Include="images\icon.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

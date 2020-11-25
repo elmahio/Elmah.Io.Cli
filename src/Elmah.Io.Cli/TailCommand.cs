@@ -1,5 +1,6 @@
 ﻿using Elmah.Io.Client;
 using Elmah.Io.Client.Models;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -57,55 +58,45 @@ namespace Elmah.Io.Cli
 
                     foreach (var message in messages.OrderBy(msg => msg.DateTime.Value))
                     {
-                        SetColor(message.Severity);
-                        Console.WriteLine($"{message.DateTime.Value}|{message.Severity}|{message.Title}");
+                        var table = new Table();
+                        table.HideHeaders();
+                        table.Expand = true;
+                        table.AddColumns(new TableColumn("") { Width = 17 }, new TableColumn("") { Width = 9 }, new TableColumn(""));
+                        table.AddRow(message.DateTime.Value.ToLocalTime().ToString(), $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
+                        AnsiConsole.Render(table);
                         previous.Add(message.Id);
-                        ResetColor();
                     }
 
                     from = now;
                 }
 
+#pragma warning disable CS0162 // Unreachable code detected
                 return 0;
+#pragma warning restore CS0162 // Unreachable code detected
             });
 
             return logCommand;
         }
 
-        private static void SetColor(string severity)
+        private static string GetColor(string severity)
         {
             switch(severity)
             {
                 case "Verbose":
-                    Console.BackgroundColor = ConsoleColor.Gray;
-                    Console.ForegroundColor = ConsoleColor.Black;
-                    break;
+                    return "[#cccccc]";
                 case "Debug":
-                    Console.BackgroundColor = ConsoleColor.DarkGray;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
+                    return "[#95c1ba]";
                 case "Information":
-                    Console.BackgroundColor = ConsoleColor.DarkGreen;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
+                    return "[#0da58e]";
                 case "Warning":
-                    Console.BackgroundColor = ConsoleColor.Yellow;
-                    Console.ForegroundColor = ConsoleColor.Black;
-                    break;
+                    return "[#ffc936]";
                 case "Error":
-                    Console.BackgroundColor = ConsoleColor.Red;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
+                    return "[#e6614f]";
                 case "Fatal":
-                    Console.BackgroundColor = ConsoleColor.DarkRed;
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
+                    return "[#993636]";
             }
-        }
 
-        private static void ResetColor()
-        {
-            Console.ResetColor();
+            return "[#0da58e]";
         }
     }
 }

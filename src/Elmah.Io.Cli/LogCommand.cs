@@ -1,4 +1,5 @@
 ﻿using Elmah.Io.Client.Models;
+using Spectre.Console;
 using System;
 using System.CommandLine;
 using System.CommandLine.Invocation;
@@ -58,11 +59,11 @@ namespace Elmah.Io.Cli
                     });
                     if (message != null)
                     {
-                        Console.WriteLine($"Message successfully logged to https://app.elmah.io/errorlog/search?logId={logId}&hidden=true&expand=true&filters=id:%22{message.Id}%22#searchTab");
+                        AnsiConsole.MarkupLine($"[#0da58e]Message successfully logged to https://app.elmah.io/errorlog/search?logId={logId}&hidden=true&expand=true&filters=id:%22{message.Id}%22#searchTab[/]");
                     }
                     else
                     {
-                        Console.WriteLine("Message not logged");
+                        AnsiConsole.MarkupLine("[#e6614f]Message not logged[/]");
                     }
                 });
 
