@@ -1,7 +1,6 @@
 ﻿using Elmah.Io.Client;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ShellProgressBar;
 using Spectre.Console;
 using System;
 using System.CommandLine;
@@ -59,35 +58,39 @@ namespace Elmah.Io.Cli
                         messSum = 10000;
                     }
 
-                    int i = 0;
-                    var options = new ProgressBarOptions
-                    {
-                        ProgressCharacter = '=',
-                        ProgressBarOnBottom = false,
-                        ForegroundColorDone = ConsoleColor.Green,
-                        ForegroundColor = ConsoleColor.White
-                    };
-                    using (var pbar = new ProgressBar(messSum, "Exporting log from API", options))
-                    {
-                        if (File.Exists(filename)) File.Delete(filename);
-                        using (StreamWriter w = File.AppendText(filename))
+                    AnsiConsole
+                        .Progress()
+                        .Start(ctx =>
                         {
-                            w.WriteLine("[");
-                            while (i < messSum)
+                            // Define tasks
+                            var task = ctx.AddTask("Exporting log messages", new ProgressTaskSettings
                             {
-                                var respons = api.Messages.GetAll(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
-                                foreach (Client.Models.MessageOverview message in respons.Messages)
+                                MaxValue = messSum,
+                            });
+
+                            if (File.Exists(filename)) File.Delete(filename);
+                            using (StreamWriter w = File.AppendText(filename))
+                            {
+                                int i = 0;
+                                w.WriteLine("[");
+                                while (i < messSum)
                                 {
-                                    w.WriteLine(JValue.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
-                                    i++;
-                                    if (i != messSum) w.WriteLine(",");
-                                    pbar.Tick("Step " + i + " of " + messSum);
+                                    var respons = api.Messages.GetAll(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
+                                    foreach (Client.Models.MessageOverview message in respons.Messages)
+                                    {
+                                        w.WriteLine(JValue.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
+                                        i++;
+                                        if (i != messSum) w.WriteLine(",");
+                                        task.Increment(1);
+                                    }
                                 }
+                                w.WriteLine("]");
                             }
-                            w.WriteLine("]");
-                            pbar.Tick("Done with export to " + filename);
-                        }
-                    }
+
+                            task.StopTask();
+                        });
+
+                    AnsiConsole.MarkupLine($"[green]Done with export to [/][grey]{filename}[/]");
                 }
             });
 
