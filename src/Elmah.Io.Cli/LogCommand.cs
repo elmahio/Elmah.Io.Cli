@@ -34,6 +34,7 @@ namespace Elmah.Io.Cli
                 new Option<string>("--url", "If message relates to a HTTP request, you may send the URL of that request. If you don't provide us with an URL, we will try to find a key named URL in serverVariables."),
                 new Option<string>("--method", "If message relates to a HTTP request, you may send the HTTP method of that request. If you don't provide us with a method, we will try to find a key named REQUEST_METHOD in serverVariables."),
                 new Option<string>("--version", "Versions can be used to distinguish messages from different versions of your software. The value of version can be a SemVer compliant string or any other syntax that you are using as your version numbering scheme."),
+                new Option<string>("--correlationId", "CorrelationId can be used to group similar log messages together into a single discoverable batch. A correlation ID could be a session ID from ASP.NET Core, a unique string spanning multiple microsservices handling the same request, or similar."),
             };
             logCommand.Description = "Log a message to the specified log";
             logCommand.Handler = CommandHandler.Create<string, Guid, MessageModel>(
@@ -56,6 +57,7 @@ namespace Elmah.Io.Cli
                         Url = messageModel.Url,
                         User = messageModel.User,
                         Version = messageModel.Version,
+                        CorrelationId = messageModel.CorrelationId,
                     });
                     if (message != null)
                     {
@@ -86,6 +88,7 @@ namespace Elmah.Io.Cli
             public string Url { get; set; }
             public string Method { get; set; }
             public string Version { get; set; }
+            public string CorrelationId { get; set; }
         }
     }
 }
