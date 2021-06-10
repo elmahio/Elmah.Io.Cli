@@ -1,4 +1,4 @@
-﻿using Elmah.Io.Client.Models;
+﻿using Elmah.Io.Client;
 using Spectre.Console;
 using System;
 using System.CommandLine;

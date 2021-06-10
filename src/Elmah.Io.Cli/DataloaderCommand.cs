@@ -1,5 +1,4 @@
 ﻿using Elmah.Io.Client;
-using Elmah.Io.Client.Models;
 using Spectre.Console;
 using System;
 using System.CommandLine;
@@ -33,7 +32,7 @@ namespace Elmah.Io.Cli
             dataloaderCommand.Description = "Load 50 log messages into the specified log";
             dataloaderCommand.Handler = CommandHandler.Create<string, Guid>((apiKey, logId) =>
             {
-                var api = new ElmahioAPI(new ApiKeyCredentials(apiKey));
+                var api = ElmahioAPI.Create(apiKey);
                 var random = new Random();
                 var yesterday = DateTime.UtcNow.AddDays(-1);
                 AnsiConsole

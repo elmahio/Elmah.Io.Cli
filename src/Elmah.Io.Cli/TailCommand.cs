@@ -1,5 +1,4 @@
 ﻿using Elmah.Io.Client;
-using Elmah.Io.Client.Models;
 using Spectre.Console;
 using System;
 using System.Collections.Generic;

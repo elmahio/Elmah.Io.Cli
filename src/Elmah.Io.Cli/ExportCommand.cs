@@ -76,7 +76,7 @@ namespace Elmah.Io.Cli
                                 while (i < messSum)
                                 {
                                     var respons = api.Messages.GetAll(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
-                                    foreach (Client.Models.MessageOverview message in respons.Messages)
+                                    foreach (Client.MessageOverview message in respons.Messages)
                                     {
                                         w.WriteLine(JValue.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
                                         i++;
