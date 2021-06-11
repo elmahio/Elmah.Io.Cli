@@ -32,41 +32,48 @@ namespace Elmah.Io.Cli
                 var previous = new List<string>();
                 while (true)
                 {
-                    Thread.Sleep(5000);
-                    var now = DateTime.UtcNow;
-                    var fiveSecondsBefore = from.AddSeconds(-5);
-                    var result = api.Messages.GetAll(logId.ToString(), 0, 0, "*", fiveSecondsBefore, now, false);
-                    if (result?.Total.HasValue != true || result.Total.Value == 0)
+                    try
                     {
-                        from = now;
+                        Thread.Sleep(5000);
+                        var now = DateTime.UtcNow;
+                        var fiveSecondsBefore = from.AddSeconds(-5);
+                        var result = api.Messages.GetAll(logId.ToString(), 0, 0, "*", fiveSecondsBefore, now, false);
+                        if (result?.Total.HasValue != true || result.Total.Value == 0)
+                        {
+                            from = now;
+                            previous.Clear();
+                            continue;
+                        };
+
+                        int total = result.Total.Value;
+                        int i = 0;
+                        var messages = new List<MessageOverview>();
+                        while (i < total)
+                        {
+                            var response = api.Messages.GetAll(logId.ToString(), i / 10, 10, "*", fiveSecondsBefore, now, false);
+                            messages.AddRange(response.Messages.Where(msg => !previous.Contains(msg.Id)));
+                            i += response.Messages.Count;
+                        }
+
                         previous.Clear();
-                        continue;
-                    };
 
-                    int total = result.Total.Value;
-                    int i = 0;
-                    var messages = new List<MessageOverview>();
-                    while (i < total)
-                    {
-                        var response = api.Messages.GetAll(logId.ToString(), i / 10, 10, "*", fiveSecondsBefore, now, false);
-                        messages.AddRange(response.Messages.Where(msg => !previous.Contains(msg.Id)));
-                        i += response.Messages.Count;
+                        foreach (var message in messages.OrderBy(msg => msg.DateTime.Value))
+                        {
+                            var table = new Table();
+                            table.HideHeaders();
+                            table.Expand = true;
+                            table.AddColumns(new TableColumn("") { Width = 17 }, new TableColumn("") { Width = 9 }, new TableColumn(""));
+                            table.AddRow(message.DateTime.Value.ToLocalTime().ToString(), $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
+                            AnsiConsole.Render(table);
+                            previous.Add(message.Id);
+                        }
+
+                        from = now;
                     }
-
-                    previous.Clear();
-
-                    foreach (var message in messages.OrderBy(msg => msg.DateTime.Value))
+                    catch (Exception e)
                     {
-                        var table = new Table();
-                        table.HideHeaders();
-                        table.Expand = true;
-                        table.AddColumns(new TableColumn("") { Width = 17 }, new TableColumn("") { Width = 9 }, new TableColumn(""));
-                        table.AddRow(message.DateTime.Value.ToLocalTime().ToString(), $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
-                        AnsiConsole.Render(table);
-                        previous.Add(message.Id);
+                        AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
                     }
-
-                    from = now;
                 }
 
 #pragma warning disable CS0162 // Unreachable code detected

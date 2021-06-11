@@ -37,10 +37,11 @@ namespace Elmah.Io.Cli
                 new Option<string>("--correlationId", "CorrelationId can be used to group similar log messages together into a single discoverable batch. A correlation ID could be a session ID from ASP.NET Core, a unique string spanning multiple microsservices handling the same request, or similar."),
             };
             logCommand.Description = "Log a message to the specified log";
-            logCommand.Handler = CommandHandler.Create<string, Guid, MessageModel>(
-                (apiKey, logId, messageModel) =>
+            logCommand.Handler = CommandHandler.Create<string, Guid, MessageModel>((apiKey, logId, messageModel) =>
+            {
+                var api = Api(apiKey);
+                try
                 {
-                    var api = Api(apiKey);
                     var message = api.Messages.CreateAndNotify(logId, new CreateMessage
                     {
                         Application = messageModel.Application,
@@ -67,7 +68,12 @@ namespace Elmah.Io.Cli
                     {
                         AnsiConsole.MarkupLine("[#e6614f]Message not logged[/]");
                     }
-                });
+                }
+                catch (Exception e)
+                {
+                    AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                }
+            });
 
             return logCommand;
         }

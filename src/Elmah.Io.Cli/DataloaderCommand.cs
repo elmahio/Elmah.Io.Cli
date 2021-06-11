@@ -32,7 +32,7 @@ namespace Elmah.Io.Cli
             dataloaderCommand.Description = "Load 50 log messages into the specified log";
             dataloaderCommand.Handler = CommandHandler.Create<string, Guid>((apiKey, logId) =>
             {
-                var api = ElmahioAPI.Create(apiKey);
+                var api = Api(apiKey);
                 var random = new Random();
                 var yesterday = DateTime.UtcNow.AddDays(-1);
                 AnsiConsole
@@ -47,34 +47,36 @@ namespace Elmah.Io.Cli
                             MaxValue = numberOfMessages,
                         });
 
-                        for (var i = 0; i < numberOfMessages; i++)
+                        try
                         {
-                            var r = random.NextDouble();
-                            api.Messages.CreateAndNotify(logId, new CreateMessage
+                            for (var i = 0; i < numberOfMessages; i++)
                             {
-                                //Application = "Elmah.Io.DataLoader",
-                                Cookies = new[]
+                                var r = random.NextDouble();
+                                api.Messages.CreateAndNotify(logId, new CreateMessage
                                 {
+                                    //Application = "Elmah.Io.DataLoader",
+                                    Cookies = new[]
+                                    {
                                     new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
                                     new Item("_ga", "GA1.3.1580453215.1783132008"),
                                 },
-                                Data = new[]
-                                {
+                                    Data = new[]
+                                    {
                                     new Item("Father", "Stephen Falken"),
                                 },
-                                DateTime = yesterday.AddMinutes(random.Next(1440)),
-                                Detail = DotNetStackTrace,
-                                Form = new[]
-                                {
+                                    DateTime = yesterday.AddMinutes(random.Next(1440)),
+                                    Detail = DotNetStackTrace,
+                                    Form = new[]
+                                    {
                                     new Item ("Username", "Joshua"),
                                     new Item ("Password", "********"),
                                 },
-                                QueryString = new[]
-                                {
+                                    QueryString = new[]
+                                    {
                                     new Item("logid", logId.ToString())
                                 },
-                                ServerVariables = new[]
-                                {
+                                    ServerVariables = new[]
+                                    {
                                     new Item("REMOTE_ADDR", "1.1.1.1"),
                                     new Item("CERT_KEYSIZE", "256"),
                                     new Item("CONTENT_LENGTH", "0"),
@@ -85,22 +87,29 @@ namespace Elmah.Io.Cli
                                     new Item("URL", Url(r)),
                                     new Item("HTTP_HOST", "foo.bar"),
                                 },
-                                Hostname = "Web01",
-                                Severity = Severity(r),
-                                Source = "Elmah.Io.Cli.exe",
-                                StatusCode = StatusCode(r),
-                                Title = Title(r),
-                                Type = Type(r),
-                                Url = Url(r),
-                                Method = Method(r),
-                                User = User(r),
-                                Version = "1.1.0",
-                                Application = "Dataloader",
-                            });
-                            task.Increment(1);
+                                    Hostname = "Web01",
+                                    Severity = Severity(r),
+                                    Source = "Elmah.Io.Cli.exe",
+                                    StatusCode = StatusCode(r),
+                                    Title = Title(r),
+                                    Type = Type(r),
+                                    Url = Url(r),
+                                    Method = Method(r),
+                                    User = User(r),
+                                    Version = "1.1.0",
+                                    Application = "Dataloader",
+                                });
+                                task.Increment(1);
+                            }
                         }
-
-                        task.StopTask();
+                        catch (Exception e)
+                        {
+                            AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                        }
+                        finally
+                        {
+                            task.StopTask();
+                        }
                     });
 
                 AnsiConsole.MarkupLine("[green]Successfully loaded [/][grey]50[/][green] log messages[/]");
