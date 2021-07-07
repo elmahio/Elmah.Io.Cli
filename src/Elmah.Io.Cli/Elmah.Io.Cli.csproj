@@ -25,9 +25,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Elmah.Io.Client" Version="4.0.25-pre" />
+    <PackageReference Include="Elmah.Io.Client" Version="4.0.26-pre" />
     <PackageReference Include="Spectre.Console" Version="0.40.0" />
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21216.1" />
+    <PackageReference Include="System.CommandLine" Version="2.0.0-beta1.21308.1" />
   </ItemGroup>
 
   <ItemGroup>
