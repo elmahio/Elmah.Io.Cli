@@ -64,7 +64,7 @@ namespace Elmah.Io.Cli
                             table.Expand = true;
                             table.AddColumns(new TableColumn("") { Width = 17 }, new TableColumn("") { Width = 9 }, new TableColumn(""));
                             table.AddRow(message.DateTime.Value.ToLocalTime().ToString(), $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
-                            AnsiConsole.Render(table);
+                            AnsiConsole.Write(table);
                             previous.Add(message.Id);
                         }
 

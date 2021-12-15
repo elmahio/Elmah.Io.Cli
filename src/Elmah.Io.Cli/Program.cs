@@ -1,8 +1,5 @@
 ﻿using Spectre.Console;
-using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.IO;
 
 namespace Elmah.Io.Cli
 {
@@ -18,8 +15,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(TailCommand.Create());
             rootCommand.AddCommand(DataloaderCommand.Create());
 
-            AnsiConsole.Render(
-                new FigletText("elmah.io")
+            AnsiConsole.Write(new FigletText("elmah.io")
                     .LeftAligned()
                     .Color(new Color(13, 165, 142)));
 
