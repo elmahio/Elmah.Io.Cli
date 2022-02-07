@@ -26,6 +26,7 @@ namespace Elmah.Io.Cli
                 AnsiConsole.MarkupLine("[yellow]Copyright (C)[/] [rgb(13,165,142)]elmah.io[/]. All rights reserved.");
             }
 
+            args = args.Where(arg => arg != "--nologo").ToArray();
             AnsiConsole.WriteLine();
 
             return rootCommand.InvokeAsync(args).Result;
