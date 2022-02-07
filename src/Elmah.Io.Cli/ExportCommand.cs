@@ -38,7 +38,7 @@ namespace Elmah.Io.Cli
                     getDefaultValue:() => Path.Combine(Directory.GetCurrentDirectory(), $"Export-{DateTime.Now.Ticks}.json"),
                     "Defines the path and filename of the file to export to. Ex. \" -Filename C:\\myDirectory\\myFile.json\""),
                 new Option<string>("--query", getDefaultValue:() => "*", "Defines the query that is passed to the API"),
-                new Option<bool>("--includeHeaders", "Include headers, cookies, etc. in output (will take longer to export)")
+                new Option<bool>("--includeHeaders", "Include headers, cookies, etc. in output (will take longer to export)"),
             };
             exportCommand.Description = "Export log messages from a specified log";
             exportCommand.Handler = CommandHandler.Create<string, Guid, DateTime, DateTime, string, string, bool>((apiKey, logId, dateFrom, dateTo, filename, query, includeHeaders) =>

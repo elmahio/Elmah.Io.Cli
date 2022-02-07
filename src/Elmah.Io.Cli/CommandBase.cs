@@ -1,7 +1,6 @@
 ﻿using Elmah.Io.Client;
 using System;
 using System.Net.Http.Headers;
-using System.Text;
 
 namespace Elmah.Io.Cli
 {

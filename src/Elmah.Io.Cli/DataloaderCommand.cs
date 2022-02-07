@@ -27,7 +27,7 @@ namespace Elmah.Io.Cli
                 new Option<Guid>("--logId", "The log ID of the log to import messages into")
                 {
                     IsRequired = true
-                }
+                },
             };
             dataloaderCommand.Description = "Load 50 log messages into the specified log";
             dataloaderCommand.Handler = CommandHandler.Create<string, Guid>((apiKey, logId) =>
