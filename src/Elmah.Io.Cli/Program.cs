@@ -18,6 +18,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(TailCommand.Create());
             rootCommand.AddCommand(DataloaderCommand.Create());
             rootCommand.AddCommand(DeploymentCommand.Create());
+            rootCommand.AddCommand(SourceMapCommand.Create());
 
             if (args == null || args.All(arg => arg != "--nologo"))
             {
