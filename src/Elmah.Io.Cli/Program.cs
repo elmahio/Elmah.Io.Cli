@@ -13,12 +13,13 @@ namespace Elmah.Io.Cli
                 new Option<bool>("--nologo", "Doesn't display the startup banner or the copyright message"),
             };
 
-            rootCommand.AddCommand(ExportCommand.Create());
-            rootCommand.AddCommand(LogCommand.Create());
-            rootCommand.AddCommand(TailCommand.Create());
+            rootCommand.AddCommand(ClearCommand.Create());
             rootCommand.AddCommand(DataloaderCommand.Create());
             rootCommand.AddCommand(DeploymentCommand.Create());
+            rootCommand.AddCommand(ExportCommand.Create());
+            rootCommand.AddCommand(LogCommand.Create());
             rootCommand.AddCommand(SourceMapCommand.Create());
+            rootCommand.AddCommand(TailCommand.Create());
 
             if (args == null || args.All(arg => arg != "--nologo"))
             {
