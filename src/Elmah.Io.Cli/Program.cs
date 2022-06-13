@@ -16,6 +16,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(ClearCommand.Create());
             rootCommand.AddCommand(DataloaderCommand.Create());
             rootCommand.AddCommand(DeploymentCommand.Create());
+            rootCommand.AddCommand(DiagnoseCommand.Create());
             rootCommand.AddCommand(ExportCommand.Create());
             rootCommand.AddCommand(LogCommand.Create());
             rootCommand.AddCommand(SourceMapCommand.Create());
