@@ -246,8 +246,8 @@ namespace Elmah.Io.Cli
             return itemGroups
                 .SelectMany(ig => ig
                     .Elements(ns + "PackageReference")
-                    .Where(pr => pr.Attribute("Include").Value.StartsWith("Elmah.Io")))
-                .ToDictionary(pr => pr.Attribute("Include").Value, pr => pr.Attribute("Version").Value);
+                    .Where(pr => pr.Attribute("Include") != null && pr.Attribute("Include").Value.StartsWith("Elmah.Io")))
+                .ToDictionary(pr => pr.Attribute("Include").Value, pr => pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
         }
 
         private static void DiagnosePackageVersion(Dictionary<string, string> packagesFound, params string[] packageNames)
@@ -255,6 +255,8 @@ namespace Elmah.Io.Cli
             foreach (var packageName in packageNames)
             {
                 var packageVersion = packagesFound[packageName];
+                if (string.IsNullOrWhiteSpace(packageVersion)) continue;
+
                 if (packageVersion.StartsWith("1."))
                     ReportError("An old 1.x package is referenced. Install the newest version from NuGet.");
                 else if (packageVersion.StartsWith("2."))
