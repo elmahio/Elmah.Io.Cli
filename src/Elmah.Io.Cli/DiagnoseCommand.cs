@@ -35,7 +35,8 @@ namespace Elmah.Io.Cli
                 var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true };
                 var filesWithPackages = rootDir
                     .EnumerateFiles("*.csproj", options)
-                    .Where(f => !ignoreDirs.Contains(f.DirectoryName));
+                    .Where(f => !ignoreDirs.Contains(f.DirectoryName))
+                    .Concat(rootDir.EnumerateFiles("packages.config", options).Where(f => !ignoreDirs.Contains(f.DirectoryName)));
 
                 if (filesWithPackages.Count() == 0)
                 {
@@ -154,6 +155,28 @@ namespace Elmah.Io.Cli
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, "Elmah.Io", "Elmah.Io.AspNet", "Elmah.Io.Mvc", "Elmah.Io.WebApi");
+
+            var webConfigPath = Path.Combine(packageFile.DirectoryName, "web.config");
+            if (File.Exists(webConfigPath))
+            {
+                var webConfig = File.ReadAllText(webConfigPath);
+                if (!webConfig.Contains("<sectionGroup name=\"elmah\""))
+                    ReportError("No section group named 'elmah' found in web.config.");
+                if (!webConfig.Contains("<section name=\"errorLog\""))
+                    ReportError("No section named 'errorLog' found in web.config.");
+                if (!webConfig.Contains("<add name=\"ErrorLog\" type=\"Elmah.ErrorLogModule, Elmah\""))
+                    ReportError("No error log module found in httpModules or modules in web.config.");
+                if (!webConfig.Contains("<elmah>"))
+                    ReportError("No <elmah> element found in web.config.");
+                if (!webConfig.Contains("<errorLog "))
+                    ReportError("No <errorLog> element found in web.config.");
+                if (!webConfig.Contains("type=\"Elmah.Io.ErrorLog, Elmah.Io\""))
+                    ReportError("No <errorLog> with type ELmah.Io.ErrorLog type found in web.config.");
+            }
+            else
+            {
+                ReportError("Web.config file not found.");
+            }
         }
 
         private static void DiagnoseExtensionsLogging(FileInfo packageFile, Dictionary<string, string> packagesFound)
@@ -238,22 +261,46 @@ namespace Elmah.Io.Cli
         private static Dictionary<string, string> FindPackages(FileInfo packageFile)
         {
             var document = XDocument.Load(packageFile.FullName);
-            var ns = document.Root.GetDefaultNamespace();
-            var project = document.Element(ns + "Project");
-            var itemGroups = project
-                .Elements(ns + "ItemGroup")
-                .ToList();
-            return itemGroups
-                .SelectMany(ig => ig
-                    .Elements(ns + "PackageReference")
-                    .Where(pr => pr.Attribute("Include") != null && pr.Attribute("Include").Value.StartsWith("Elmah.Io")))
-                .ToDictionary(pr => pr.Attribute("Include").Value, pr => pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
+
+            var packages = new Dictionary<string, string>();
+
+            if (packageFile.Extension.Equals("csproj", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var ns = document.Root.GetDefaultNamespace();
+                var project = document.Element(ns + "Project");
+                var itemGroups = project
+                    .Elements(ns + "ItemGroup")
+                    .ToList();
+
+                foreach (var pr in itemGroups
+                    .SelectMany(ig => ig
+                        .Elements(ns + "PackageReference")
+                        .Where(pr => pr.Attribute("Include") != null && pr.Attribute("Include").Value.StartsWith("Elmah.Io"))))
+                {
+                    packages.Add(pr.Attribute("Include").Value, pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
+                }
+            }
+            else if (packageFile.Name.Equals("packages.config", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var packagesElement = document.Element("packages");
+                var packageElements = packagesElement
+                    .Elements("package")
+                    .ToList();
+
+                foreach (var package in packageElements)
+                {
+                    packages.Add(package.Attribute("id").Value, package.Attribute("version") != null ? package.Attribute("version").Value : null);
+                }
+            }
+
+            return packages;
         }
 
         private static void DiagnosePackageVersion(Dictionary<string, string> packagesFound, params string[] packageNames)
         {
             foreach (var packageName in packageNames)
             {
+                if (!packagesFound.ContainsKey(packageName)) continue;
                 var packageVersion = packagesFound[packageName];
                 if (string.IsNullOrWhiteSpace(packageVersion)) continue;
 
