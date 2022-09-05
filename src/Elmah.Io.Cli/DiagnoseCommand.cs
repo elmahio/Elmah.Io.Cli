@@ -1,4 +1,5 @@
-﻿using Spectre.Console;
+﻿using Elmah.Io.Client;
+using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
@@ -82,6 +83,8 @@ namespace Elmah.Io.Cli
             var log4netConfigPath = Path.Combine(projectDir.FullName, "log4net.config");
             var foundElmahIoConfig = false;
 
+            string fileContent = null;
+
             bool FindConfig(string file)
             {
                 return file.Contains("<log4net", StringComparison.InvariantCultureIgnoreCase)
@@ -90,14 +93,31 @@ namespace Elmah.Io.Cli
             }
 
             if (File.Exists(webConfigPath) && FindConfig(File.ReadAllText(webConfigPath)))
+            {
                 foundElmahIoConfig = true;
+                fileContent = File.ReadAllText(webConfigPath);
+            }
             if (File.Exists(appConfigPath) && FindConfig(File.ReadAllText(appConfigPath)))
+            {
                 foundElmahIoConfig = true;
+                fileContent = File.ReadAllText(appConfigPath);
+            }
             if (File.Exists(log4netConfigPath) && FindConfig(File.ReadAllText(log4netConfigPath)))
+            {
                 foundElmahIoConfig = true;
+                fileContent = File.ReadAllText(log4netConfigPath);
+            }
 
             if (!foundElmahIoConfig)
                 ReportError("log4net configuration for the elmah.io appender could not be found.");
+
+            if (!string.IsNullOrWhiteSpace(fileContent))
+            {
+                var apiKey = LookupString(fileContent, "type=\"elmah.io.log4net.ElmahIoAppender, elmah.io.log4net\"", "apiKey value=\"", 32);
+                var logId = LookupString(fileContent, "type=\"elmah.io.log4net.ElmahIoAppender, elmah.io.log4net\"", "logId value=\"", 36);
+
+                DiagnoseKeys(apiKey, logId);
+            }
         }
 
         private static void DiagnoseSerilog(FileInfo packageFile, Dictionary<string, string> packagesFound)
@@ -111,9 +131,16 @@ namespace Elmah.Io.Cli
             var foundElmahIoConfig = false;
             foreach (var csFile in csFiles)
             {
-                if (File.ReadAllText(csFile.FullName).Contains(".ElmahIo("))
+                var fileContent = File.ReadAllText(csFile.FullName);
+                if (fileContent.Contains(".ElmahIo("))
                 {
-                    foundElmahIoConfig |= true;
+                    foundElmahIoConfig = true;
+
+                    var apiKey = LookupString(fileContent, ".ElmahIo(", "ElmahIoSinkOptions(\"", 32);
+                    var logId = LookupString(fileContent, ".ElmahIo(", ", new Guid(\"", 36);
+
+                    DiagnoseKeys(apiKey, logId);
+
                     break;
                 }
             }
@@ -130,8 +157,10 @@ namespace Elmah.Io.Cli
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
             var appConfigPath = Path.Combine(projectDir.FullName, "app.config");
-            var log4netConfigPath = Path.Combine(projectDir.FullName, "nlog.config");
+            var nlogConfigPath = Path.Combine(projectDir.FullName, "nlog.config");
             var foundElmahIoConfig = false;
+
+            string fileContent = null;
 
             bool FindConfig(string file)
             {
@@ -141,14 +170,31 @@ namespace Elmah.Io.Cli
             }
 
             if (File.Exists(webConfigPath) && FindConfig(File.ReadAllText(webConfigPath)))
+            {
                 foundElmahIoConfig = true;
+                fileContent = File.ReadAllText(webConfigPath);
+            }
             if (File.Exists(appConfigPath) && FindConfig(File.ReadAllText(appConfigPath)))
+            {
                 foundElmahIoConfig = true;
-            if (File.Exists(log4netConfigPath) && FindConfig(File.ReadAllText(log4netConfigPath)))
+                fileContent = File.ReadAllText(appConfigPath);
+            }
+            if (File.Exists(nlogConfigPath) && FindConfig(File.ReadAllText(nlogConfigPath)))
+            {
                 foundElmahIoConfig = true;
+                fileContent = File.ReadAllText(nlogConfigPath);
+            }
 
             if (!foundElmahIoConfig)
                 ReportError("NLog configuration for the elmah.io target could not be found.");
+
+            if (!string.IsNullOrWhiteSpace(fileContent))
+            {
+                var apiKey = LookupString(fileContent, "type=\"elmah.io\"", " apiKey=\"", 32);
+                var logId = LookupString(fileContent, "type=\"elmah.io\"", " logId=\"", 36);
+
+                DiagnoseKeys(apiKey, logId);
+            }
         }
 
         private static void DiagnoseElmahIo(FileInfo packageFile, Dictionary<string, string> packagesFound)
@@ -172,6 +218,11 @@ namespace Elmah.Io.Cli
                     ReportError("No <errorLog> element found in web.config.");
                 if (!webConfig.Contains("type=\"Elmah.Io.ErrorLog, Elmah.Io\""))
                     ReportError("No <errorLog> with type ELmah.Io.ErrorLog type found in web.config.");
+
+                var apiKey = LookupString(webConfig, "type=\"Elmah.Io.ErrorLog, Elmah.Io\"", " apiKey=\"", 32);
+                var logId = LookupString(webConfig, "type=\"Elmah.Io.ErrorLog, Elmah.Io\"", " logId=\"", 36);
+
+                DiagnoseKeys(apiKey, logId);
             }
             else
             {
@@ -186,12 +237,36 @@ namespace Elmah.Io.Cli
 
             var projectDir = packageFile.Directory;
             var programPath = Path.Combine(projectDir.FullName, "Program.cs");
+
+            string apiKey = null;
+            string logId = null;
+
             if (File.Exists(programPath))
             {
                 var programCs = File.ReadAllText(programPath);
                 if (!programCs.Contains(".AddElmahIo("))
                     ReportError("A call to AddElmahIo was not found in Program.cs.");
+
+                var apiKeyLookup = LookupString(programCs, ".AddElmahIo(", ".ApiKey = \"", 32);
+                if (apiKeyLookup != null) apiKey = apiKeyLookup;
+                var logIdLookup = LookupString(programCs, ".AddElmahIo(", ".LogId = new Guid(\"", 36);
+                if (logIdLookup != null) logId = logIdLookup;
             }
+
+            // If we haven't found API key and log ID yet, try looking in appsettings.json
+            var appSettingsJson = Path.Combine(projectDir.FullName, "appsettings.json");
+            if (string.IsNullOrWhiteSpace(apiKey) && File.Exists(appSettingsJson))
+            {
+                var apiKeyLookup = LookupString(File.ReadAllText(appSettingsJson), "\"ElmahIo\":", "\"ApiKey\": \"", 32);
+                if (apiKeyLookup != null) apiKey = apiKeyLookup;
+            }
+            if (string.IsNullOrWhiteSpace(logId) && File.Exists(appSettingsJson))
+            {
+                var logIdLookup = LookupString(File.ReadAllText(appSettingsJson), "\"ElmahIo\":", "\"LogId\": \"", 36);
+                if (logIdLookup != null) logId = logIdLookup;
+            }
+
+            DiagnoseKeys(apiKey, logId);
         }
 
         private static void DiagnoseAspNetCore(FileInfo packageFile, Dictionary<string, string> packagesFound)
@@ -205,6 +280,9 @@ namespace Elmah.Io.Cli
             var foundElmahIoConfig = false;
             string fileWithElmahConfig = null;
 
+            string apiKey = null;
+            string logId = null;
+
             if (File.Exists(startupPath))
             {
                 var startupCs = File.ReadAllText(startupPath);
@@ -212,6 +290,11 @@ namespace Elmah.Io.Cli
                 {
                     foundElmahIoConfig = true;
                     fileWithElmahConfig = startupCs;
+
+                    var apiKeyLookup = LookupString(startupCs, ".AddElmahIo(", ".ApiKey = \"", 32);
+                    if (apiKeyLookup != null) apiKey = apiKeyLookup;
+                    var logIdLookup = LookupString(startupCs, ".AddElmahIo(", ".LogId = new Guid(\"", 36);
+                    if (logIdLookup != null) logId = logIdLookup;
                 }
             }
             if (File.Exists(programPath))
@@ -221,6 +304,11 @@ namespace Elmah.Io.Cli
                 {
                     foundElmahIoConfig = true;
                     fileWithElmahConfig = programCs;
+
+                    var apiKeyLookup = LookupString(programCs, ".AddElmahIo(", ".ApiKey = \"", 32);
+                    if (apiKeyLookup != null) apiKey = apiKeyLookup;
+                    var logIdLookup = LookupString(programCs, ".AddElmahIo(", ".LogId = new Guid(\"", 36);
+                    if (logIdLookup != null) logId = logIdLookup;
                 }
             }
 
@@ -256,6 +344,65 @@ namespace Elmah.Io.Cli
                 else if (useUmbracoIndex != -1 && index > useUmbracoIndex)
                     ReportError("UseElmahIo must be called before UseUmbraco");
             }
+
+            // If we haven't found API key and log ID yet, try looking in appsettings.json
+            var appSettingsJson = Path.Combine(projectDir.FullName, "appsettings.json");
+            if (string.IsNullOrWhiteSpace(apiKey) && File.Exists(appSettingsJson))
+            {
+                var apiKeyLookup = LookupString(File.ReadAllText(appSettingsJson), "\"ElmahIo\":", "\"ApiKey\": \"", 32);
+                if (apiKeyLookup != null) apiKey = apiKeyLookup;
+            }
+            if (string.IsNullOrWhiteSpace(logId) && File.Exists(appSettingsJson))
+            {
+                var logIdLookup = LookupString(File.ReadAllText(appSettingsJson), "\"ElmahIo\":", "\"LogId\": \"", 36);
+                if (logIdLookup != null) logId = logIdLookup;
+            }
+
+            DiagnoseKeys(apiKey, logId);
+        }
+
+        private static void DiagnoseKeys(string apiKey, string logId)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(logId)) return;
+
+            if (apiKey.Length != 32 || !Guid.TryParse(apiKey, out Guid _))
+            {
+                ReportError($"Invalid API key: {apiKey}");
+                return;
+            }
+
+            if (logId.Length != 36 || !Guid.TryParse(logId, out Guid _))
+            {
+                ReportError($"Invalid log ID: {logId}");
+                return;
+            }
+
+            var api = Api(apiKey);
+
+            try
+            {
+                var diagnoseResult = api.Logs.Diagnose(logId);
+                foreach (var result in diagnoseResult)
+                {
+                    ReportError(result);
+                }
+            }
+            catch (ElmahIoClientException e)
+            {
+                ReportError(e.Message);
+            }
+        }
+
+        private static string LookupString(string fileContent, string startAt, string start, int requiredLength)
+        {
+            var startAtIndex = fileContent.IndexOf(startAt, StringComparison.InvariantCultureIgnoreCase);
+            if (startAtIndex == -1) return null;
+            var startFound = fileContent.IndexOf(start, startAtIndex, StringComparison.InvariantCultureIgnoreCase);
+            if (startFound == -1) return null;
+
+            var beginAt = startFound + start.Length;
+
+            return fileContent.Substring(beginAt, requiredLength);
         }
 
         private static Dictionary<string, string> FindPackages(FileInfo packageFile)
@@ -264,7 +411,7 @@ namespace Elmah.Io.Cli
 
             var packages = new Dictionary<string, string>();
 
-            if (packageFile.Extension.Equals("csproj", StringComparison.InvariantCultureIgnoreCase))
+            if (packageFile.Extension.Equals(".csproj", StringComparison.InvariantCultureIgnoreCase))
             {
                 var ns = document.Root.GetDefaultNamespace();
                 var project = document.Element(ns + "Project");
@@ -275,7 +422,7 @@ namespace Elmah.Io.Cli
                 foreach (var pr in itemGroups
                     .SelectMany(ig => ig
                         .Elements(ns + "PackageReference")
-                        .Where(pr => pr.Attribute("Include") != null && pr.Attribute("Include").Value.StartsWith("Elmah.Io"))))
+                        .Where(pr => pr.Attribute("Include") != null && (pr.Attribute("Include").Value.StartsWith("Elmah.Io") || pr.Attribute("Include").Value.Equals("Serilog.Sinks.ElmahIo")))))
                 {
                     packages.Add(pr.Attribute("Include").Value, pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
                 }
