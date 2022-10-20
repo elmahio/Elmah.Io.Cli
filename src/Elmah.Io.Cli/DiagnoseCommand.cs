@@ -7,7 +7,9 @@ using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Schema;
 
 namespace Elmah.Io.Cli
 {
@@ -106,6 +108,7 @@ namespace Elmah.Io.Cli
             {
                 foundElmahIoConfig = true;
                 fileContent = File.ReadAllText(log4netConfigPath);
+                ValidateXmlAgainstSchema("log4net.config", fileContent, ("", "https://elmah.io/schemas/log4net.xsd"));
             }
 
             if (!foundElmahIoConfig)
@@ -166,7 +169,8 @@ namespace Elmah.Io.Cli
             {
                 return file.Contains("<nlog", StringComparison.InvariantCultureIgnoreCase)
                     && file.Contains("name=\"elmahio\"", StringComparison.InvariantCultureIgnoreCase)
-                    && file.Contains("type=\"elmah.io\"", StringComparison.InvariantCultureIgnoreCase);
+                    && (file.Contains("type=\"elmah.io\"", StringComparison.InvariantCultureIgnoreCase)
+                        || file.Contains("type=\"elmahio:elmah.io\"", StringComparison.InvariantCultureIgnoreCase));
             }
 
             if (File.Exists(webConfigPath) && FindConfig(File.ReadAllText(webConfigPath)))
@@ -183,6 +187,12 @@ namespace Elmah.Io.Cli
             {
                 foundElmahIoConfig = true;
                 fileContent = File.ReadAllText(nlogConfigPath);
+                AnsiConsole.MarkupLine("Validating nlog.config. Any errors may be resolved by changing the target type from [grey]elmah.io[/] to [grey]elmahio:elmah.io[/].");
+                ValidateXmlAgainstSchema(
+                    "nlog.config",
+                    fileContent,
+                    ("http://www.nlog-project.org/schemas/NLog.xsd", "http://www.nlog-project.org/schemas/NLog.xsd"),
+                    ("http://www.nlog-project.org/schemas/NLog.Targets.Elmah.Io.xsd", "http://www.nlog-project.org/schemas/NLog.Targets.Elmah.Io.xsd"));
             }
 
             if (!foundElmahIoConfig)
@@ -191,7 +201,16 @@ namespace Elmah.Io.Cli
             if (!string.IsNullOrWhiteSpace(fileContent))
             {
                 var apiKey = LookupString(fileContent, "type=\"elmah.io\"", " apiKey=\"", 32);
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    apiKey = LookupString(fileContent, "type=\"elmahio:elmah.io\"", " apiKey=\"", 32);
+                }
+
                 var logId = LookupString(fileContent, "type=\"elmah.io\"", " logId=\"", 36);
+                if (string.IsNullOrWhiteSpace(logId))
+                {
+                    logId = LookupString(fileContent, "type=\"elmahio:elmah.io\"", " logId=\"", 36);
+                }
 
                 DiagnoseKeys(apiKey, logId);
             }
@@ -461,6 +480,39 @@ namespace Elmah.Io.Cli
         private static void ReportError(string message)
         {
             AnsiConsole.MarkupLine($"[red]- {message}[/]");
+        }
+
+        private static void ValidateXmlAgainstSchema(string fileName, string fileContent, params (string targetNamespace, string schemaUrl)[] schemaUrls)
+        {
+            if (string.IsNullOrWhiteSpace(fileContent)) return;
+
+            var r = new StringReader(fileContent);
+
+            var schema = new XmlSchemaSet();
+            foreach (var schemaUrl in schemaUrls)
+            {
+                schema.Add(schemaUrl.targetNamespace, XmlReader.Create(schemaUrl.schemaUrl));
+            }
+            var xrs = new XmlReaderSettings
+            {
+                ValidationType = ValidationType.Schema,
+                Schemas = schema,
+            };
+            xrs.ValidationEventHandler += (o, s) =>
+            {
+                ReportError($"Error in {fileName}: {s.Message}");
+            };
+
+            using (XmlReader xr = XmlReader.Create(r, xrs))
+            {
+                try
+                {
+                    while (xr.Read()) { }
+                }
+                catch
+                {
+                }
+            }
         }
     }
 }
