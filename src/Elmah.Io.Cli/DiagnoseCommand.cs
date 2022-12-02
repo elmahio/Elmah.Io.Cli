@@ -6,7 +6,6 @@ using System.CommandLine;
 using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -47,28 +46,32 @@ namespace Elmah.Io.Cli
                     return;
                 }
 
-                foreach (var packageFile in filesWithPackages)
-                {
-                    var packagesFound = FindPackages(packageFile);
+                AnsiConsole.Status()
+                    .Spinner(Spinner.Known.Star)
+                    .Start("Working...", ctx => {
+                        foreach (var packageFile in filesWithPackages)
+                        {
+                            var packagesFound = FindPackages(packageFile);
 
-                    if (packagesFound.ContainsKey("Elmah.Io.AspNetCore"))
-                        DiagnoseAspNetCore(packageFile, packagesFound);
+                            if (packagesFound.ContainsKey("Elmah.Io.AspNetCore"))
+                                DiagnoseAspNetCore(packageFile, packagesFound);
 
-                    if (packagesFound.ContainsKey("Elmah.Io.Extensions.Logging"))
-                        DiagnoseExtensionsLogging(packageFile, packagesFound);
+                            if (packagesFound.ContainsKey("Elmah.Io.Extensions.Logging"))
+                                DiagnoseExtensionsLogging(packageFile, packagesFound);
 
-                    if (packagesFound.ContainsKey("Elmah.Io") || packagesFound.ContainsKey("Elmah.Io.Mvc") || packagesFound.ContainsKey("Elmah.Io.WebApi") || packagesFound.ContainsKey("Elmah.Io.AspNet"))
-                        DiagnoseElmahIo(packageFile, packagesFound);
+                            if (packagesFound.ContainsKey("Elmah.Io") || packagesFound.ContainsKey("Elmah.Io.Mvc") || packagesFound.ContainsKey("Elmah.Io.WebApi") || packagesFound.ContainsKey("Elmah.Io.AspNet"))
+                                DiagnoseElmahIo(packageFile, packagesFound);
 
-                    if (packagesFound.ContainsKey("Elmah.Io.Log4Net"))
-                        DiagnoseLog4Net(packageFile, packagesFound);
+                            if (packagesFound.ContainsKey("Elmah.Io.Log4Net"))
+                                DiagnoseLog4Net(packageFile, packagesFound);
 
-                    if (packagesFound.ContainsKey("Elmah.Io.NLog"))
-                        DiagnoseNLog(packageFile, packagesFound);
+                            if (packagesFound.ContainsKey("Elmah.Io.NLog"))
+                                DiagnoseNLog(packageFile, packagesFound);
 
-                    if (packagesFound.ContainsKey("Serilog.Sinks.ElmahIo"))
-                        DiagnoseSerilog(packageFile, packagesFound);
-                }
+                            if (packagesFound.ContainsKey("Serilog.Sinks.ElmahIo"))
+                                DiagnoseSerilog(packageFile, packagesFound);
+                        }
+                    });
             });
 
             return diagnoseCommand;
