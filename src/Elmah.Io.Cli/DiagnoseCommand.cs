@@ -19,7 +19,7 @@ namespace Elmah.Io.Cli
         {
             var diagnoseCommand = new Command("diagnose")
             {
-                new Option<string>("--directory", () => new FileInfo(Assembly.GetExecutingAssembly().Location).Directory.FullName, "The root directory to check")
+                new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check")
             };
             diagnoseCommand.Description = "Diagnose potential problems with an elmah.io installation";
             diagnoseCommand.Handler = CommandHandler.Create<string>((directory) =>
