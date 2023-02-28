@@ -53,22 +53,22 @@ namespace Elmah.Io.Cli
                         {
                             var packagesFound = FindPackages(packageFile);
 
-                            if (packagesFound.ContainsKey("Elmah.Io.AspNetCore"))
+                            if (packagesFound.ContainsKey("elmah.io.aspnetcore"))
                                 DiagnoseAspNetCore(packageFile, packagesFound);
 
-                            if (packagesFound.ContainsKey("Elmah.Io.Extensions.Logging"))
+                            if (packagesFound.ContainsKey("elmah.io.extensions.logging"))
                                 DiagnoseExtensionsLogging(packageFile, packagesFound);
 
-                            if (packagesFound.ContainsKey("Elmah.Io") || packagesFound.ContainsKey("Elmah.Io.Mvc") || packagesFound.ContainsKey("Elmah.Io.WebApi") || packagesFound.ContainsKey("Elmah.Io.AspNet"))
+                            if (packagesFound.ContainsKey("elmah.io") || packagesFound.ContainsKey("elmah.io.mvc") || packagesFound.ContainsKey("elmah.io.webapi") || packagesFound.ContainsKey("elmah.io.aspnet"))
                                 DiagnoseElmahIo(packageFile, packagesFound);
 
-                            if (packagesFound.ContainsKey("Elmah.Io.Log4Net"))
+                            if (packagesFound.ContainsKey("elmah.io.log4net"))
                                 DiagnoseLog4Net(packageFile, packagesFound);
 
-                            if (packagesFound.ContainsKey("Elmah.Io.NLog"))
+                            if (packagesFound.ContainsKey("elmah.io.nlog"))
                                 DiagnoseNLog(packageFile, packagesFound);
 
-                            if (packagesFound.ContainsKey("Serilog.Sinks.ElmahIo"))
+                            if (packagesFound.ContainsKey("serilog.sinks.elmahio"))
                                 DiagnoseSerilog(packageFile, packagesFound);
                         }
                     });
@@ -80,7 +80,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseLog4Net(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Log4Net[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Elmah.Io.Log4Net");
+            DiagnosePackageVersion(packagesFound, "elmah.io.log4net");
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -129,7 +129,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseSerilog(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Serilog.Sinks.ElmahIo[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Serilog.Sinks.ElmahIo");
+            DiagnosePackageVersion(packagesFound, "serilog.sinks.elmahio");
 
             var projectDir = packageFile.Directory;
             var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true };
@@ -158,7 +158,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseNLog(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.NLog[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Elmah.Io.NLog");
+            DiagnosePackageVersion(packagesFound, "elmah.io.nlog");
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -222,7 +222,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseElmahIo(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Elmah.Io", "Elmah.Io.AspNet", "Elmah.Io.Mvc", "Elmah.Io.WebApi");
+            DiagnosePackageVersion(packagesFound, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
 
             var webConfigPath = Path.Combine(packageFile.DirectoryName, "web.config");
             if (File.Exists(webConfigPath))
@@ -255,7 +255,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseExtensionsLogging(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Extensions.Logging[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Elmah.Io.Extensions.Logging");
+            DiagnosePackageVersion(packagesFound, "elmah.io.extensions.logging");
 
             var projectDir = packageFile.Directory;
             var programPath = Path.Combine(projectDir.FullName, "Program.cs");
@@ -294,7 +294,7 @@ namespace Elmah.Io.Cli
         private static void DiagnoseAspNetCore(FileInfo packageFile, Dictionary<string, string> packagesFound)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.AspNetCore[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "Elmah.Io.AspNetCore");
+            DiagnosePackageVersion(packagesFound, "elmah.io.aspnetcore");
 
             var projectDir = packageFile.Directory;
             var startupPath = Path.Combine(projectDir.FullName, "Startup.cs");
@@ -444,9 +444,9 @@ namespace Elmah.Io.Cli
                 foreach (var pr in itemGroups
                     .SelectMany(ig => ig
                         .Elements(ns + "PackageReference")
-                        .Where(pr => pr.Attribute("Include") != null && (pr.Attribute("Include").Value.StartsWith("Elmah.Io") || pr.Attribute("Include").Value.Equals("Serilog.Sinks.ElmahIo")))))
+                        .Where(pr => pr.Attribute("Include") != null && (pr.Attribute("Include").Value.StartsWith("elmah.io", StringComparison.InvariantCultureIgnoreCase) || pr.Attribute("Include").Value.Equals("serilog.sinks.elmahio", StringComparison.InvariantCultureIgnoreCase)))))
                 {
-                    packages.Add(pr.Attribute("Include").Value, pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
+                    packages.Add(pr.Attribute("Include").Value.ToLower(), pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
                 }
             }
             else if (packageFile.Name.Equals("packages.config", StringComparison.InvariantCultureIgnoreCase))
@@ -458,7 +458,7 @@ namespace Elmah.Io.Cli
 
                 foreach (var package in packageElements)
                 {
-                    packages.Add(package.Attribute("id").Value, package.Attribute("version") != null ? package.Attribute("version").Value : null);
+                    packages.Add(package.Attribute("id").Value.ToLower(), package.Attribute("version") != null ? package.Attribute("version").Value : null);
                 }
             }
 
