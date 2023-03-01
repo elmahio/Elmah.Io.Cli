@@ -224,6 +224,9 @@ namespace Elmah.Io.Cli
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
 
+            if (packagesFound.ContainsKey("elmah.bootstrapper"))
+                ReportError("elmah.io cannot be configured using ELMAH Bootstrapper (remove the elmah.bootstrapper NuGet package).");
+
             var webConfigPath = Path.Combine(packageFile.DirectoryName, "web.config");
             if (File.Exists(webConfigPath))
             {
