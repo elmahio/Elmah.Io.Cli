@@ -31,16 +31,17 @@ namespace Elmah.Io.Cli
             var dateTimeOption = new Option<DateTimeOffset?>("--dateTime", "The date and time in UTC of the message. If you don't provide us with a value in dateTime, we will set the current date and time in UTC.");
             var typeOption = new Option<string>("--type", "The type of message. If logging an error, the type of the exception would go into type but you can put anything in there, that makes sense for your domain.");
             var userOption = new Option<string>("--user", "An identification of the user triggering this message. You can put the users email address or your user key into this property.");
-            var severityOption = new Option<string>("--severity", "An enum value representing the severity of this message. The following values are allowed: Verbose, Debug, Information, Warning, Error, Fatal");
+            var severityOption = new Option<string>("--severity", "An enum value representing the severity of this message. The following values are allowed: Verbose, Debug, Information, Warning, Error, Fatal.");
             var urlOption = new Option<string>("--url", "If message relates to a HTTP request, you may send the URL of that request. If you don't provide us with an URL, we will try to find a key named URL in serverVariables.");
             var methodOption = new Option<string>("--method", "If message relates to a HTTP request, you may send the HTTP method of that request. If you don't provide us with a method, we will try to find a key named REQUEST_METHOD in serverVariables.");
             var versionOption = new Option<string>("--version", "Versions can be used to distinguish messages from different versions of your software. The value of version can be a SemVer compliant string or any other syntax that you are using as your version numbering scheme.");
             var correlationIdOption = new Option<string>("--correlationId", "CorrelationId can be used to group similar log messages together into a single discoverable batch. A correlation ID could be a session ID from ASP.NET Core, a unique string spanning multiple microsservices handling the same request, or similar.");
-            
+            var categoryOption = new Option<string>("--category", "The category to set on the message. Category can be used to emulate a logger name when created from a logging framework.");
+
             var logCommand = new Command("log", "Log a message to the specified log")
             {
-                apiKeyOption, logIdOption, applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption,
-                statusCodeOption, dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption
+                apiKeyOption, logIdOption, applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption,
+                dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption
             };
             logCommand.SetHandler(async (apiKey, logId, messageModel) =>
             {
@@ -64,6 +65,7 @@ namespace Elmah.Io.Cli
                         User = messageModel.User,
                         Version = messageModel.Version,
                         CorrelationId = messageModel.CorrelationId,
+                        Category = messageModel.Category,
                     });
                     if (message != null)
                     {
@@ -78,7 +80,7 @@ namespace Elmah.Io.Cli
                 {
                     AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
                 }
-            }, apiKeyOption, logIdOption, new MessageModelBinder(applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption, dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption));
+            }, apiKeyOption, logIdOption, new MessageModelBinder(applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption, dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption));
 
             return logCommand;
         }
@@ -100,6 +102,7 @@ namespace Elmah.Io.Cli
             public string Method { get; set; }
             public string Version { get; set; }
             public string CorrelationId { get; set; }
+            public string Category { get; set; }
         }
 
         private class MessageModelBinder : BinderBase<MessageModel>
@@ -119,8 +122,9 @@ namespace Elmah.Io.Cli
             private Option<string> methodOption;
             private Option<string> versionOption;
             private Option<string> correlationIdOption;
+            private readonly Option<string> categoryOption;
 
-            public MessageModelBinder(Option<string> applicationOption, Option<string> detailOption, Option<string> hostnameOption, Option<string> titleOption, Option<string> titleTemplateOption, Option<string> sourceOption, Option<int> statusCodeOption, Option<DateTimeOffset?> dateTimeOption, Option<string> typeOption, Option<string> userOption, Option<string> severityOption, Option<string> urlOption, Option<string> methodOption, Option<string> versionOption, Option<string> correlationIdOption)
+            public MessageModelBinder(Option<string> applicationOption, Option<string> detailOption, Option<string> hostnameOption, Option<string> titleOption, Option<string> titleTemplateOption, Option<string> sourceOption, Option<int> statusCodeOption, Option<DateTimeOffset?> dateTimeOption, Option<string> typeOption, Option<string> userOption, Option<string> severityOption, Option<string> urlOption, Option<string> methodOption, Option<string> versionOption, Option<string> correlationIdOption, Option<string> categoryOption)
             {
                 this.applicationOption = applicationOption;
                 this.detailOption = detailOption;
@@ -137,6 +141,7 @@ namespace Elmah.Io.Cli
                 this.methodOption = methodOption;
                 this.versionOption = versionOption;
                 this.correlationIdOption = correlationIdOption;
+                this.categoryOption = categoryOption;
             }
 
             protected override MessageModel GetBoundValue(BindingContext bindingContext)
@@ -158,6 +163,7 @@ namespace Elmah.Io.Cli
                     Method = bindingContext.ParseResult.GetValueForOption(methodOption),
                     Version = bindingContext.ParseResult.GetValueForOption(versionOption),
                     CorrelationId = bindingContext.ParseResult.GetValueForOption(correlationIdOption),
+                    Category = bindingContext.ParseResult.GetValueForOption(categoryOption),
                 };
             }
         }

@@ -97,6 +97,7 @@ namespace Elmah.Io.Cli
                                     User = User(r),
                                     Version = "1.1.0",
                                     Application = "Dataloader",
+                                    Category = Category(r),
                                 });
                                 task.Increment(1);
                             }
@@ -115,6 +116,13 @@ namespace Elmah.Io.Cli
             }, apiKeyOption, logIdOption);
 
             return dataloaderCommand;
+        }
+
+        private static string Category(double random)
+        {
+            if (random > 0.5) return "Microsoft.Hosting.Lifetime";
+            if (random > 0.2) return "Elmah.Io";
+            return null;
         }
 
         private static string Method(double random)
