@@ -2,7 +2,6 @@
 using Spectre.Console;
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 
 namespace Elmah.Io.Cli
 {
@@ -18,26 +17,26 @@ namespace Elmah.Io.Cli
 
         internal static Command Create()
         {
-            var dataloaderCommand = new Command("dataloader")
+            var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
             {
-                new Option<string>("--apiKey", description: "An API key with permission to execute the command")
-                {
-                    IsRequired = true,
-                },
-                new Option<Guid>("--logId", "The log ID of the log to import messages into")
-                {
-                    IsRequired = true
-                },
+                IsRequired = true,
             };
-            dataloaderCommand.Description = "Load 50 log messages into the specified log";
-            dataloaderCommand.Handler = CommandHandler.Create<string, Guid>((apiKey, logId) =>
+            var logIdOption = new Option<Guid>("--logId", "The log ID of the log to import messages into")
+            {
+                IsRequired = true
+            };
+            var dataloaderCommand = new Command("dataloader", "Load 50 log messages into the specified log")
+            {
+                apiKeyOption, logIdOption
+            };
+            dataloaderCommand.SetHandler(async (apiKey, logId) =>
             {
                 var api = Api(apiKey);
                 var random = new Random();
-                var yesterday = DateTime.UtcNow.AddDays(-1);
-                AnsiConsole
+                var yesterday = DateTimeOffset.UtcNow.AddDays(-1);
+                await AnsiConsole
                     .Progress()
-                    .Start(ctx =>
+                    .StartAsync(async ctx =>
                     {
                         var numberOfMessages = 50;
 
@@ -52,41 +51,41 @@ namespace Elmah.Io.Cli
                             for (var i = 0; i < numberOfMessages; i++)
                             {
                                 var r = random.NextDouble();
-                                api.Messages.CreateAndNotify(logId, new CreateMessage
+                                await api.Messages.CreateAndNotifyAsync(logId, new CreateMessage
                                 {
                                     //Application = "Elmah.Io.DataLoader",
                                     Cookies = new[]
                                     {
-                                    new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
-                                    new Item("_ga", "GA1.3.1580453215.1783132008"),
-                                },
+                                        new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
+                                        new Item("_ga", "GA1.3.1580453215.1783132008"),
+                                    },
                                     Data = new[]
                                     {
-                                    new Item("Father", "Stephen Falken"),
-                                },
+                                        new Item("Father", "Stephen Falken"),
+                                    },
                                     DateTime = yesterday.AddMinutes(random.Next(1440)),
                                     Detail = DotNetStackTrace,
                                     Form = new[]
                                     {
-                                    new Item ("Username", "Joshua"),
-                                    new Item ("Password", "********"),
-                                },
+                                        new Item ("Username", "Joshua"),
+                                        new Item ("Password", "********"),
+                                    },
                                     QueryString = new[]
                                     {
-                                    new Item("logid", logId.ToString())
-                                },
+                                        new Item("logid", logId.ToString())
+                                    },
                                     ServerVariables = new[]
                                     {
-                                    new Item("REMOTE_ADDR", "1.1.1.1"),
-                                    new Item("CERT_KEYSIZE", "256"),
-                                    new Item("CONTENT_LENGTH", "0"),
-                                    new Item("QUERY_STRING", "logid=" + logId),
-                                    new Item("REQUEST_METHOD", Method(r)),
-                                    new Item("HTTP_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"),
-                                    new Item("HTTP_CF_IPCOUNTRY", "AU"),
-                                    new Item("URL", Url(r)),
-                                    new Item("HTTP_HOST", "foo.bar"),
-                                },
+                                        new Item("REMOTE_ADDR", "1.1.1.1"),
+                                        new Item("CERT_KEYSIZE", "256"),
+                                        new Item("CONTENT_LENGTH", "0"),
+                                        new Item("QUERY_STRING", "logid=" + logId),
+                                        new Item("REQUEST_METHOD", Method(r)),
+                                        new Item("HTTP_USER_AGENT", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"),
+                                        new Item("HTTP_CF_IPCOUNTRY", "AU"),
+                                        new Item("URL", Url(r)),
+                                        new Item("HTTP_HOST", "foo.bar"),
+                                    },
                                     Hostname = "Web01",
                                     Severity = Severity(r),
                                     Source = "Elmah.Io.Cli.exe",
@@ -113,7 +112,7 @@ namespace Elmah.Io.Cli
                     });
 
                 AnsiConsole.MarkupLine("[green]Successfully loaded [/][grey]50[/][green] log messages[/]");
-            });
+            }, apiKeyOption, logIdOption);
 
             return dataloaderCommand;
         }

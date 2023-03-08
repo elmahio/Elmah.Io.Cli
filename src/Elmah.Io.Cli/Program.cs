@@ -25,7 +25,6 @@ namespace Elmah.Io.Cli
             if (args == null || args.All(arg => arg != "--nologo"))
             {
                 AnsiConsole.Write(new FigletText("elmah.io")
-                        .LeftAligned()
                         .Color(new Color(13, 165, 142)));
                 AnsiConsole.MarkupLine("[yellow]Copyright (C)[/] [rgb(13,165,142)]elmah.io[/]. All rights reserved.");
             }

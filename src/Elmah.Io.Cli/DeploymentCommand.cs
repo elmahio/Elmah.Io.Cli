@@ -1,9 +1,6 @@
 ﻿using Spectre.Console;
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Text;
 
 namespace Elmah.Io.Cli
 {
@@ -11,29 +8,29 @@ namespace Elmah.Io.Cli
     {
         internal static Command Create()
         {
-            var deploymentCommand = new Command("deployment")
+            var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
             {
-                new Option<string>("--apiKey", description: "An API key with permission to execute the command")
-                {
-                    IsRequired = true,
-                },
-                new Option<string>("--version", "The version number of this deployment")
-                {
-                    IsRequired = true,
-                },
-                new Option<DateTime>("--created", "When was this deployment created in UTC"),
-                new Option<string>("--description", "Description of this deployment"),
-                new Option<string>("--userName", "The name of the person responsible for creating this deployment"),
-                new Option<string>("--userEmail", "The email of the person responsible for creating this deployment"),
-                new Option<Guid>("--logId", "The ID of a log if this deployment is specific to a single log"),
+                IsRequired = true,
             };
-            deploymentCommand.Description = "Create a new deployment";
-            deploymentCommand.Handler = CommandHandler.Create<string, string, DateTime?, string, string, string, Guid?>((apiKey, version, created, description, userName, userEmail, logId) =>
+            var versionOption = new Option<string>("--version", "The version number of this deployment")
+            {
+                IsRequired = true,
+            };
+            var createdOption = new Option<DateTimeOffset?>("--created", "When was this deployment created in UTC");
+            var descriptionOption = new Option<string>("--description", "Description of this deployment");
+            var userNameOption = new Option<string>("--userName", "The name of the person responsible for creating this deployment");
+            var userEmailOption = new Option<string>("--userEmail", "The email of the person responsible for creating this deployment");
+            var logIdOption = new Option<Guid?>("--logId", "The ID of a log if this deployment is specific to a single log");
+            var deploymentCommand = new Command("deployment", "Create a new deployment")
+            {
+                apiKeyOption, versionOption, createdOption, descriptionOption, userNameOption, userEmailOption, logIdOption
+            };
+            deploymentCommand.SetHandler(async (apiKey, version, created, description, userName, userEmail, logId) =>
             {
                 var api = Api(apiKey);
                 try
                 {
-                    var result = api.Deployments.Create(new Client.CreateDeployment
+                    var result = await api.Deployments.CreateAsync(new Client.CreateDeployment
                     {
                         Version = version,
                         Created = created,
@@ -49,7 +46,7 @@ namespace Elmah.Io.Cli
                 {
                     AnsiConsole.WriteException(e);
                 }
-            });
+            }, apiKeyOption, versionOption, createdOption, descriptionOption, userNameOption, userEmailOption, logIdOption);
 
             return deploymentCommand;
         }

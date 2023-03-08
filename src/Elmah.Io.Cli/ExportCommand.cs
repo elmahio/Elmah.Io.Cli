@@ -1,10 +1,8 @@
-﻿using Elmah.Io.Client;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 
 namespace Elmah.Io.Cli
@@ -15,38 +13,38 @@ namespace Elmah.Io.Cli
         {
             var today = DateTime.Today;
             var aWeekAgo = today.AddDays(-7);
-            var exportCommand = new Command("export")
+            var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
             {
-                new Option<string>("--apiKey", description: "An API key with permission to execute the command")
-                {
-                    IsRequired = true,
-                },
-                new Option<Guid>("--logId", "The ID of the log to export messages from")
-                {
-                    IsRequired = true
-                },
-                new Option<DateTime>("--dateFrom", $"Defines the Date from which the logs start. Ex. \" --dateFrom {aWeekAgo:yyyy-MM-dd}\"")
-                {
-                    IsRequired = true,
-                },
-                new Option<DateTime>("--dateTo", $"Defines the Date from which the logs end. Ex. \" --dateTo {today:yyyy-MM-dd}\"")
-                {
-                    IsRequired = true,
-                },
-                new Option<string>(
-                    "--filename",
-                    getDefaultValue:() => Path.Combine(Directory.GetCurrentDirectory(), $"Export-{DateTime.Now.Ticks}.json"),
-                    "Defines the path and filename of the file to export to. Ex. \" -Filename C:\\myDirectory\\myFile.json\""),
-                new Option<string>("--query", getDefaultValue:() => "*", "Defines the query that is passed to the API"),
-                new Option<bool>("--includeHeaders", "Include headers, cookies, etc. in output (will take longer to export)"),
+                IsRequired = true,
             };
-            exportCommand.Description = "Export log messages from a specified log";
-            exportCommand.Handler = CommandHandler.Create<string, Guid, DateTime, DateTime, string, string, bool>((apiKey, logId, dateFrom, dateTo, filename, query, includeHeaders) =>
+            var logIdOption = new Option<Guid>("--logId", "The ID of the log to export messages from")
+            {
+                IsRequired = true
+            };
+            var dateFromOption = new Option<DateTimeOffset>("--dateFrom", $"Defines the Date from which the logs start. Ex. \" --dateFrom {aWeekAgo:yyyy-MM-dd}\"")
+            {
+                IsRequired = true,
+            };
+            var dateToOption = new Option<DateTimeOffset>("--dateTo", $"Defines the Date from which the logs end. Ex. \" --dateTo {today:yyyy-MM-dd}\"")
+            {
+                IsRequired = true,
+            };
+            var filenameOption = new Option<string>(
+                  "--filename",
+                  getDefaultValue: () => Path.Combine(Directory.GetCurrentDirectory(), $"Export-{DateTimeOffset.Now.Ticks}.json"),
+                  "Defines the path and filename of the file to export to. Ex. \" --filename C:\\myDirectory\\myFile.json\"");
+            var queryOption = new Option<string>("--query", getDefaultValue: () => "*", "Defines the query that is passed to the API");
+            var includeHeadersOption = new Option<bool>("--includeHeaders", "Include headers, cookies, etc. in output (will take longer to export)");
+            var exportCommand = new Command("export", "Export log messages from a specified log")
+            {
+                apiKeyOption, logIdOption, dateFromOption, dateToOption, filenameOption, queryOption, includeHeadersOption
+            };
+            exportCommand.SetHandler(async (apiKey, logId, dateFrom, dateTo, filename, query, includeHeaders) =>
             {
                 var api = Api(apiKey);
                 try
                 {
-                    var startResult = api.Messages.GetAll(logId.ToString(), 0, 1, query, dateFrom, dateTo, includeHeaders);
+                    var startResult = await api.Messages.GetAllAsync(logId.ToString(), 0, 1, query, dateFrom, dateTo, includeHeaders);
                     if (startResult == null)
                     {
                         AnsiConsole.MarkupLine("[#ffc936]Could not find any messages for this API key and log ID combination[/]");
@@ -60,12 +58,12 @@ namespace Elmah.Io.Cli
                             messSum = 10000;
                         }
 
-                        AnsiConsole
+                        await AnsiConsole
                             .Progress()
-                            .Start(ctx =>
+                            .StartAsync(async ctx =>
                             {
-                            // Define tasks
-                            var task = ctx.AddTask("Exporting log messages", new ProgressTaskSettings
+                                // Define tasks
+                                var task = ctx.AddTask("Exporting log messages", new ProgressTaskSettings
                                 {
                                     MaxValue = messSum,
                                 });
@@ -77,10 +75,10 @@ namespace Elmah.Io.Cli
                                     w.WriteLine("[");
                                     while (i < messSum)
                                     {
-                                        var respons = api.Messages.GetAll(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
+                                        var respons = await api.Messages.GetAllAsync(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
                                         foreach (Client.MessageOverview message in respons.Messages)
                                         {
-                                            w.WriteLine(JValue.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
+                                            w.WriteLine(JToken.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
                                             i++;
                                             if (i != messSum) w.WriteLine(",");
                                             task.Increment(1);
@@ -99,7 +97,7 @@ namespace Elmah.Io.Cli
                 {
                     AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
                 }
-            });
+            }, apiKeyOption, logIdOption, dateFromOption, dateToOption, filenameOption, queryOption, includeHeadersOption);
 
             return exportCommand;
         }

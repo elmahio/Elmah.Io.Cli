@@ -1,7 +1,6 @@
 ﻿using Spectre.Console;
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 
 namespace Elmah.Io.Cli
@@ -10,30 +9,31 @@ namespace Elmah.Io.Cli
     {
         internal static Command Create()
         {
+            var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
+            {
+                IsRequired = true,
+            };
+            var logIdOption = new Option<Guid>("--logId", "The ID of the log which should contain the minified JavaScript and source map")
+            {
+                IsRequired = true,
+            };
+            var pathOption = new Option<string>("--path", "An URL to the online minified JavaScript file")
+            {
+                IsRequired = true,
+            };
+            var sourceMapOption = new Option<string>("--sourceMap", "The source map file. Only files with an extension of .map and content type of application/json will be accepted")
+            {
+                IsRequired = true,
+            };
+            var minifiedJavaScriptOption = new Option<string>("--minifiedJavaScript", "The minified JavaScript file. Only files with an extension of .js and content type of text/javascript will be accepted")
+            {
+                IsRequired = true,
+            };
             var sourceMapCommand = new Command("sourcemap", "Upload a source map and minified JavaScript")
             {
-                new Option<string>("--apiKey", description: "An API key with permission to execute the command")
-                {
-                    IsRequired = true,
-                },
-                new Option<Guid>("--logId", "The ID of the log which should contain the minified JavaScript and source map")
-                {
-                    IsRequired = true,
-                },
-                new Option<string>("--path", "An URL to the online minified JavaScript file")
-                {
-                    IsRequired = true,
-                },
-                new Option<string>("--sourceMap", "The source map file. Only files with an extension of .map and content type of application/json will be accepted")
-                {
-                    IsRequired = true,
-                },
-                new Option<string>("--minifiedJavaScript", "The minified JavaScript file. Only files with an extension of .js and content type of text/javascript will be accepted")
-                {
-                    IsRequired = true,
-                },
+                apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption
             };
-            sourceMapCommand.Handler = CommandHandler.Create<string, Guid, string, string, string>((apiKey, logId, path, sourceMap, minifiedJavaScript) =>
+            sourceMapCommand.SetHandler(async (apiKey, logId, path, sourceMap, minifiedJavaScript) =>
             {
                 var api = Api(apiKey);
                 try
@@ -63,7 +63,7 @@ namespace Elmah.Io.Cli
                     using var sourceMapStream = sourceMapFileInfo.OpenRead();
                     using var scriptStream = minifiedJavaScriptFileInfo.OpenRead();
 
-                    api.SourceMaps.CreateOrUpdate(
+                    await api.SourceMaps.CreateOrUpdateAsync(
                         logId.ToString(),
                         uri,
                         new Client.FileParameter(sourceMapStream, sourceMapFileInfo.Name, "application/json"),
@@ -75,7 +75,7 @@ namespace Elmah.Io.Cli
                 {
                     AnsiConsole.WriteException(e);
                 }
-            });
+            }, apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption);
 
             return sourceMapCommand;
         }

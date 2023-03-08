@@ -1,9 +1,6 @@
 ﻿using Spectre.Console;
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.Text;
 
 namespace Elmah.Io.Cli
 {
@@ -11,30 +8,30 @@ namespace Elmah.Io.Cli
     {
         internal static Command Create()
         {
-            var clearCommand = new Command("clear")
+            var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
             {
-                new Option<string>("--apiKey", description: "An API key with permission to execute the command")
-                {
-                    IsRequired = true,
-                },
-                new Option<Guid>("--logId", "The log ID of the log to clear messages")
-                {
-                    IsRequired = true
-                },
-                new Option<string>("--query", "Clear messages matching this query (use * for all messages)")
-                {
-                    IsRequired = true
-                },
-                new Option<DateTimeOffset>("--from", "Optional date and time to clear messages from"),
-                new Option<DateTimeOffset>("--to", "Optional date and time to clear messages to"),
+                IsRequired = true,
             };
-            clearCommand.Description = "Delete one or more messages from a log";
-            clearCommand.Handler = CommandHandler.Create<string, Guid, string, DateTimeOffset?, DateTimeOffset?>((apiKey, logId, query, from, to) =>
+            var logIdOption = new Option<Guid>("--logId", "The log ID of the log to clear messages")
+            {
+                IsRequired = true
+            };
+            var queryOption = new Option<string>("--query", "Clear messages matching this query (use * for all messages)")
+            {
+                IsRequired = true
+            };
+            var fromOption = new Option<DateTimeOffset?>("--from", "Optional date and time to clear messages from");
+            var toOption = new Option<DateTimeOffset?>("--to", "Optional date and time to clear messages to");
+            var clearCommand = new Command("clear", "Delete one or more messages from a log")
+            {
+                apiKeyOption, logIdOption, queryOption, fromOption, toOption
+            };
+            clearCommand.SetHandler(async (apiKey, logId, query, from, to) =>
             {
                 var api = Api(apiKey);
                 try
                 {
-                    api.Messages.DeleteAll(logId.ToString(), new Client.Search
+                    await api.Messages.DeleteAllAsync(logId.ToString(), new Client.Search
                     {
                         Query = query,
                         From = from,
@@ -47,7 +44,7 @@ namespace Elmah.Io.Cli
                 {
                     AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
                 }
-            });
+            }, apiKeyOption, logIdOption, queryOption, fromOption, toOption);
 
             return clearCommand;
         }

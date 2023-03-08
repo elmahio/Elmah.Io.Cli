@@ -3,7 +3,6 @@ using Spectre.Console;
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -16,12 +15,12 @@ namespace Elmah.Io.Cli
     {
         internal static Command Create()
         {
-            var diagnoseCommand = new Command("diagnose")
+            var directoryOption = new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check");
+            var diagnoseCommand = new Command("diagnose", "Diagnose potential problems with an elmah.io installation")
             {
-                new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check")
+                directoryOption
             };
-            diagnoseCommand.Description = "Diagnose potential problems with an elmah.io installation";
-            diagnoseCommand.Handler = CommandHandler.Create<string>((directory) =>
+            diagnoseCommand.SetHandler((directory) =>
             {
                 var rootDir = new DirectoryInfo(directory);
                 if (!rootDir.Exists)
@@ -72,7 +71,7 @@ namespace Elmah.Io.Cli
                                 DiagnoseSerilog(packageFile, packagesFound);
                         }
                     });
-            });
+            }, directoryOption);
 
             return diagnoseCommand;
         }
