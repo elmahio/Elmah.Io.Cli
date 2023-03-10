@@ -1,12 +1,13 @@
 ﻿using Spectre.Console;
 using System.CommandLine;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Elmah.Io.Cli
 {
     class Program
     {
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             var rootCommand = new RootCommand("CLI for executing various actions against elmah.io")
             {
@@ -18,6 +19,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(DeploymentCommand.Create());
             rootCommand.AddCommand(DiagnoseCommand.Create());
             rootCommand.AddCommand(ExportCommand.Create());
+            rootCommand.AddCommand(ImportCommand.Create());
             rootCommand.AddCommand(LogCommand.Create());
             rootCommand.AddCommand(SourceMapCommand.Create());
             rootCommand.AddCommand(TailCommand.Create());
@@ -32,7 +34,7 @@ namespace Elmah.Io.Cli
             args = args.Where(arg => arg != "--nologo").ToArray();
             AnsiConsole.WriteLine();
 
-            return rootCommand.InvokeAsync(args).Result;
+            return await rootCommand.InvokeAsync(args);
         }
     }
 }
