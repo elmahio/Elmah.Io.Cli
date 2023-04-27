@@ -13,6 +13,8 @@ namespace Elmah.Io.Cli
 {
     class DiagnoseCommand : CommandBase
     {
+        private static bool FoundError = false;
+
         internal static Command Create()
         {
             var directoryOption = new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check");
@@ -71,6 +73,8 @@ namespace Elmah.Io.Cli
                                 DiagnoseSerilog(packageFile, packagesFound);
                         }
                     });
+
+                if (!FoundError) AnsiConsole.MarkupLine("[green]No issues found[/]");
             }, directoryOption);
 
             return diagnoseCommand;
@@ -485,6 +489,7 @@ namespace Elmah.Io.Cli
         private static void ReportError(string message)
         {
             AnsiConsole.MarkupLine($"[red]- {message}[/]");
+            FoundError = true;
         }
 
         private static void ValidateXmlAgainstSchema(string fileName, string fileContent, params (string targetNamespace, string schemaUrl)[] schemaUrls)
