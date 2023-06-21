@@ -23,16 +23,16 @@ jobs:
       run: dotnet restore
 
     - name: Build win-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 --self-contained -o elmahio-win-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}-pre
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 --self-contained -o elmahio-win-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}
       
     - name: Build linux-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime linux-x64 --self-contained -o elmahio-linux-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}-pre
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime linux-x64 --self-contained -o elmahio-linux-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}
       
     - name: Build osx-x64
-      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-x64 --self-contained -o elmahio-osx-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}-pre
+      run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-x64 --self-contained -o elmahio-osx-x64 /p:AssemblyVersion=5.0.${{ github.run_number }}
 
     - name: Pack .NET Core tool
-      run: dotnet pack -c Release src/Elmah.Io.Cli/Elmah.Io.Cli.csproj /p:Version=5.0.${{ github.run_number }}-pre
+      run: dotnet pack -c Release src/Elmah.Io.Cli/Elmah.Io.Cli.csproj /p:Version=5.0.${{ github.run_number }}
 
     - name: Pack executables
       shell: bash
@@ -51,8 +51,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        tag_name: 5.0.${{ github.run_number }}-pre
-        release_name: Release 5.0.${{ github.run_number }}-pre
+        tag_name: 5.0.${{ github.run_number }}
+        release_name: Release 5.0.${{ github.run_number }}
         draft: false
         
     - name: Upload elmahio-win-x64.zip
@@ -89,5 +89,5 @@ jobs:
         asset_content_type: application/gzip
 
     - name: Push to nuget.org
-      run: dotnet nuget push src/Elmah.Io.Cli/nupkg/Elmah.Io.Cli.5.0.${{ github.run_number }}-pre.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+      run: dotnet nuget push src/Elmah.Io.Cli/nupkg/Elmah.Io.Cli.5.0.${{ github.run_number }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
       if: ${{ github.event_name == 'push' }}
