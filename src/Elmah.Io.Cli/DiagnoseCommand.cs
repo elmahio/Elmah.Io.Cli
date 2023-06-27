@@ -351,6 +351,7 @@ namespace Elmah.Io.Cli
                 var useAuthorizationIndex = fileWithElmahConfig.IndexOf(".UseAuthorization(");
                 var useAuthenticationIndex = fileWithElmahConfig.IndexOf(".UseAuthentication(");
                 var useEndpointsIndex = fileWithElmahConfig.IndexOf(".UseEndpoints(");
+                var useRoutingIndex = fileWithElmahConfig.IndexOf(".UseRouting(");
                 var useMvcIndex = fileWithElmahConfig.IndexOf(".UseMvc(");
                 var usePiranhaIndex = fileWithElmahConfig.IndexOf(".UsePiranha(");
                 var useUmbracoIndex = fileWithElmahConfig.IndexOf(".UseUmbraco(");
@@ -365,6 +366,8 @@ namespace Elmah.Io.Cli
                     ReportError("UseElmahIo must be called after UseAuthentication");
                 else if (useEndpointsIndex != -1 && index > useEndpointsIndex)
                     ReportError("UseElmahIo must be called before UseEndpoints");
+                else if (useRoutingIndex != -1 && index > useRoutingIndex)
+                    ReportError("UseElmahIo must be called before UseRouting");
                 else if (useMvcIndex != -1 && index > useMvcIndex)
                     ReportError("UseElmahIo must be called before UseMvc");
                 else if (usePiranhaIndex != -1 && index > usePiranhaIndex)
