@@ -18,11 +18,13 @@ namespace Elmah.Io.Cli
         internal static Command Create()
         {
             var directoryOption = new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check");
+            var verboseOption = new Option<bool>("--verbose", () => false, "Output verbose diagnostics to help debug problems");
             var diagnoseCommand = new Command("diagnose", "Diagnose potential problems with an elmah.io installation")
             {
-                directoryOption
+                directoryOption,
+                verboseOption,
             };
-            diagnoseCommand.SetHandler((directory) =>
+            diagnoseCommand.SetHandler((directory, verbose) =>
             {
                 var rootDir = new DirectoryInfo(directory);
                 if (!rootDir.Exists)
@@ -52,38 +54,39 @@ namespace Elmah.Io.Cli
                     .Start("Working...", ctx => {
                         foreach (var packageFile in filesWithPackages)
                         {
-                            var packagesFound = FindPackages(packageFile);
+                            var packagesFound = FindPackages(packageFile, verbose);
+                            if (verbose && packagesFound.Count == 0) AnsiConsole.MarkupLine("[grey]No packages found[/]");
 
                             if (packagesFound.ContainsKey("elmah.io.aspnetcore"))
-                                DiagnoseAspNetCore(packageFile, packagesFound);
+                                DiagnoseAspNetCore(packageFile, packagesFound, verbose);
 
                             if (packagesFound.ContainsKey("elmah.io.extensions.logging"))
-                                DiagnoseExtensionsLogging(packageFile, packagesFound);
+                                DiagnoseExtensionsLogging(packageFile, packagesFound, verbose);
 
                             if (packagesFound.ContainsKey("elmah.io") || packagesFound.ContainsKey("elmah.io.mvc") || packagesFound.ContainsKey("elmah.io.webapi") || packagesFound.ContainsKey("elmah.io.aspnet"))
-                                DiagnoseElmahIo(packageFile, packagesFound);
+                                DiagnoseElmahIo(packageFile, packagesFound, verbose);
 
                             if (packagesFound.ContainsKey("elmah.io.log4net"))
-                                DiagnoseLog4Net(packageFile, packagesFound);
+                                DiagnoseLog4Net(packageFile, packagesFound, verbose);
 
                             if (packagesFound.ContainsKey("elmah.io.nlog"))
-                                DiagnoseNLog(packageFile, packagesFound);
+                                DiagnoseNLog(packageFile, packagesFound, verbose);
 
                             if (packagesFound.ContainsKey("serilog.sinks.elmahio"))
-                                DiagnoseSerilog(packageFile, packagesFound);
+                                DiagnoseSerilog(packageFile, packagesFound, verbose);
                         }
                     });
 
                 if (!FoundError) AnsiConsole.MarkupLine("[green]No issues found[/]");
-            }, directoryOption);
+            }, directoryOption, verboseOption);
 
             return diagnoseCommand;
         }
 
-        private static void DiagnoseLog4Net(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseLog4Net(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Log4Net[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "elmah.io.log4net");
+            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.log4net");
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -114,7 +117,7 @@ namespace Elmah.Io.Cli
             {
                 foundElmahIoConfig = true;
                 fileContent = File.ReadAllText(log4netConfigPath);
-                ValidateXmlAgainstSchema("log4net.config", fileContent, ("", "https://elmah.io/schemas/log4net.xsd"));
+                ValidateXmlAgainstSchema("log4net.config", fileContent, verbose, ("", "https://elmah.io/schemas/log4net.xsd"));
             }
 
             if (!foundElmahIoConfig)
@@ -125,14 +128,18 @@ namespace Elmah.Io.Cli
                 var apiKey = LookupString(fileContent, "type=\"elmah.io.log4net.ElmahIoAppender, elmah.io.log4net\"", "apiKey value=\"", 32);
                 var logId = LookupString(fileContent, "type=\"elmah.io.log4net.ElmahIoAppender, elmah.io.log4net\"", "logId value=\"", 36);
 
-                DiagnoseKeys(apiKey, logId);
+                DiagnoseKeys(apiKey, logId, verbose);
+            }
+            else if (verbose)
+            {
+                AnsiConsole.MarkupLine("[grey]No file content found for log4net[/]");
             }
         }
 
-        private static void DiagnoseSerilog(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseSerilog(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Serilog.Sinks.ElmahIo[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "serilog.sinks.elmahio");
+            DiagnosePackageVersion(packagesFound, verbose, "serilog.sinks.elmahio");
 
             var projectDir = packageFile.Directory;
             var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true };
@@ -148,7 +155,7 @@ namespace Elmah.Io.Cli
                     var apiKey = LookupString(fileContent, ".ElmahIo(", "ElmahIoSinkOptions(\"", 32);
                     var logId = LookupString(fileContent, ".ElmahIo(", ", new Guid(\"", 36);
 
-                    DiagnoseKeys(apiKey, logId);
+                    DiagnoseKeys(apiKey, logId, verbose);
 
                     break;
                 }
@@ -158,10 +165,10 @@ namespace Elmah.Io.Cli
                 ReportError("Serilog configuration for the elmah.io sink could not be found.");
         }
 
-        private static void DiagnoseNLog(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseNLog(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.NLog[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "elmah.io.nlog");
+            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.nlog");
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -197,6 +204,7 @@ namespace Elmah.Io.Cli
                 ValidateXmlAgainstSchema(
                     "nlog.config",
                     fileContent,
+                    verbose,
                     ("http://www.nlog-project.org/schemas/NLog.xsd", "http://www.nlog-project.org/schemas/NLog.xsd"),
                     ("http://www.nlog-project.org/schemas/NLog.Targets.Elmah.Io.xsd", "http://www.nlog-project.org/schemas/NLog.Targets.Elmah.Io.xsd"));
             }
@@ -218,14 +226,18 @@ namespace Elmah.Io.Cli
                     logId = LookupString(fileContent, "type=\"elmahio:elmah.io\"", " logId=\"", 36);
                 }
 
-                DiagnoseKeys(apiKey, logId);
+                DiagnoseKeys(apiKey, logId, verbose);
+            }
+            else if (verbose)
+            {
+                AnsiConsole.MarkupLine("[grey]No file content found for log4net[/]");
             }
         }
 
-        private static void DiagnoseElmahIo(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseElmahIo(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
+            DiagnosePackageVersion(packagesFound, verbose, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
 
             if (packagesFound.ContainsKey("elmah.bootstrapper"))
                 ReportError("elmah.io cannot be configured using ELMAH Bootstrapper (remove the elmah.bootstrapper NuGet package).");
@@ -250,7 +262,7 @@ namespace Elmah.Io.Cli
                 var apiKey = LookupString(webConfig, "type=\"Elmah.Io.ErrorLog, Elmah.Io\"", " apiKey=\"", 32);
                 var logId = LookupString(webConfig, "type=\"Elmah.Io.ErrorLog, Elmah.Io\"", " logId=\"", 36);
 
-                DiagnoseKeys(apiKey, logId);
+                DiagnoseKeys(apiKey, logId, verbose);
             }
             else
             {
@@ -258,10 +270,10 @@ namespace Elmah.Io.Cli
             }
         }
 
-        private static void DiagnoseExtensionsLogging(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseExtensionsLogging(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Extensions.Logging[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "elmah.io.extensions.logging");
+            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.extensions.logging");
 
             var projectDir = packageFile.Directory;
             var programPath = Path.Combine(projectDir.FullName, "Program.cs");
@@ -294,13 +306,13 @@ namespace Elmah.Io.Cli
                 if (logIdLookup != null) logId = logIdLookup;
             }
 
-            DiagnoseKeys(apiKey, logId);
+            DiagnoseKeys(apiKey, logId, verbose);
         }
 
-        private static void DiagnoseAspNetCore(FileInfo packageFile, Dictionary<string, string> packagesFound)
+        private static void DiagnoseAspNetCore(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.AspNetCore[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, "elmah.io.aspnetcore");
+            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.aspnetcore");
 
             var projectDir = packageFile.Directory;
             var startupPath = Path.Combine(projectDir.FullName, "Startup.cs");
@@ -389,12 +401,16 @@ namespace Elmah.Io.Cli
                 if (logIdLookup != null) logId = logIdLookup;
             }
 
-            DiagnoseKeys(apiKey, logId);
+            DiagnoseKeys(apiKey, logId, verbose);
         }
 
-        private static void DiagnoseKeys(string apiKey, string logId)
+        private static void DiagnoseKeys(string apiKey, string logId, bool verbose)
         {
-            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(logId)) return;
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(logId))
+            {
+                if (verbose) AnsiConsole.MarkupLine($"[grey]Could not find API key or log ID[/]");
+                return;
+            }
 
             if (apiKey.Length != 32 || !Guid.TryParse(apiKey, out Guid _))
             {
@@ -436,7 +452,7 @@ namespace Elmah.Io.Cli
             return fileContent.Substring(beginAt, requiredLength);
         }
 
-        private static Dictionary<string, string> FindPackages(FileInfo packageFile)
+        private static Dictionary<string, string> FindPackages(FileInfo packageFile, bool verbose)
         {
             var document = XDocument.Load(packageFile.FullName);
 
@@ -471,14 +487,18 @@ namespace Elmah.Io.Cli
                 }
             }
 
+            if (verbose) AnsiConsole.MarkupLine($"[grey]Found the following packages: {string.Join(',', packages.Keys)}[/]");
+
             return packages;
         }
 
-        private static void DiagnosePackageVersion(Dictionary<string, string> packagesFound, params string[] packageNames)
+        private static void DiagnosePackageVersion(Dictionary<string, string> packagesFound, bool verbose, params string[] packageNames)
         {
+            var found = false;
             foreach (var packageName in packageNames)
             {
                 if (!packagesFound.ContainsKey(packageName)) continue;
+                found = true;
                 var packageVersion = packagesFound[packageName];
                 if (string.IsNullOrWhiteSpace(packageVersion)) continue;
 
@@ -487,6 +507,8 @@ namespace Elmah.Io.Cli
                 else if (packageVersion.StartsWith("2."))
                     ReportError("An old 2.x package is referenced. Install the newest version from NuGet.");
             }
+
+            if (verbose && !found) AnsiConsole.MarkupLine($"[grey]None of the packages {string.Join(',', packageNames)} found in found packages[/]");
         }
 
         private static void ReportError(string message)
@@ -495,9 +517,13 @@ namespace Elmah.Io.Cli
             FoundError = true;
         }
 
-        private static void ValidateXmlAgainstSchema(string fileName, string fileContent, params (string targetNamespace, string schemaUrl)[] schemaUrls)
+        private static void ValidateXmlAgainstSchema(string fileName, string fileContent, bool verbose, params (string targetNamespace, string schemaUrl)[] schemaUrls)
         {
-            if (string.IsNullOrWhiteSpace(fileContent)) return;
+            if (string.IsNullOrWhiteSpace(fileContent))
+            {
+                if (verbose) AnsiConsole.MarkupLine($"[grey]Missing file content when validating against XML schema[/]");
+                return;
+            }
 
             var r = new StringReader(fileContent);
 
@@ -522,8 +548,9 @@ namespace Elmah.Io.Cli
                 {
                     while (xr.Read()) { }
                 }
-                catch
+                catch (Exception e)
                 {
+                    if (verbose) AnsiConsole.MarkupLine($"[grey]{e.Message}[/]");
                 }
             }
         }
