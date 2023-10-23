@@ -1,19 +1,22 @@
 ﻿using Elmah.Io.Client;
+using Newtonsoft.Json;
 using Spectre.Console;
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
 
 namespace Elmah.Io.Cli
 {
     class DataloaderCommand : CommandBase
     {
-        const string DotNetStackTrace = @"Elmah.Io.TestException: This is a test exception that can be safely ignored.
-   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+        const string Stack = @"   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
    at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
    at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
    at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
    at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|6_0(Endpoint endpoint, Task requestTask, ILogger logger)
    at Elmah.Io.Startup.<>c.<<Configure>b__9_1>d.MoveNext() in c:\elmah.io\src\Elmah.Io\Startup.cs:line 364";
+        const string DotNetStackTrace = @"Elmah.Io.TestException: This is a test exception that can be safely ignored.
+" + Stack;
 
         internal static Command Create()
         {
@@ -51,6 +54,7 @@ namespace Elmah.Io.Cli
                             for (var i = 0; i < numberOfMessages; i++)
                             {
                                 var r = random.NextDouble();
+                                var dateTime = yesterday.AddMinutes(random.Next(1440));
                                 await api.Messages.CreateAndNotifyAsync(logId, new CreateMessage
                                 {
                                     //Application = "Elmah.Io.DataLoader",
@@ -59,12 +63,9 @@ namespace Elmah.Io.Cli
                                         new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
                                         new Item("_ga", "GA1.3.1580453215.1783132008"),
                                     },
-                                    Data = new[]
-                                    {
-                                        new Item("Father", "Stephen Falken"),
-                                    },
-                                    DateTime = yesterday.AddMinutes(random.Next(1440)),
-                                    Detail = DotNetStackTrace,
+                                    Data = Data(r),
+                                    DateTime = dateTime,
+                                    Detail = Detail(r),
                                     Form = new[]
                                     {
                                         new Item ("Username", "Joshua"),
@@ -86,11 +87,13 @@ namespace Elmah.Io.Cli
                                         new Item("URL", Url(r)),
                                         new Item("HTTP_HOST", "foo.bar"),
                                     },
-                                    Hostname = "Web01",
+                                    Breadcrumbs = Breadcrumbs(r, dateTime),
+                                    Hostname = Hostname(r),
                                     Severity = Severity(r),
                                     Source = "Elmah.Io.Cli.exe",
                                     StatusCode = StatusCode(r),
                                     Title = Title(r),
+                                    TitleTemplate = TitleTemplate(r),
                                     Type = Type(r),
                                     Url = Url(r),
                                     Method = Method(r),
@@ -116,6 +119,62 @@ namespace Elmah.Io.Cli
             }, apiKeyOption, logIdOption);
 
             return dataloaderCommand;
+        }
+
+        private static Item[] Data(double random)
+        {
+            var items = new List<Item>
+            {
+                new Item("Father", "Stephen Falken"),
+            };
+
+            if (random > 0.5)
+            {
+                items.Add(new Item { Key = "X-ELMAHIO-EXCEPTIONINSPECTOR", Value = Inspector("System.NullReferenceException", "Object reference not set to an instance of an object.") });
+            }
+            else if (random > 0.2)
+            {
+                items.Add(new Item { Key = "X-ELMAHIO-EXCEPTIONINSPECTOR", Value = Inspector("System.Net.HttpException", "The controller for path '/api/test' was not found or does not implement IController.") });
+            }
+
+            return items.ToArray();
+        }
+
+        private static string Inspector(string type, string message)
+        {
+            return JsonConvert.SerializeObject(new
+            {
+                Type = type,
+                Message = message,
+                StackTrace = Stack,
+                Source = "Elmah.Io.Cli.exe",
+                Data = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("Data one", "Data one value"),
+                    new KeyValuePair<string, string>("Data two", "Data two value")
+                },
+                ExceptionSpecific = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("Some arg", "Some value")
+                }
+            });
+        }
+
+        private static List<Breadcrumb> Breadcrumbs(double random, DateTimeOffset end)
+        {
+            if (random > 0.5) return new List<Breadcrumb>
+            {
+                new Breadcrumb { DateTime = end.AddSeconds(-1), Action = "request", Message = "Navigating to URL", Severity = "Information" },
+                new Breadcrumb { DateTime = end.AddSeconds(-2), Action = "submit", Message = "Submitting form", Severity = "Information" },
+            };
+
+            return new List<Breadcrumb>();
+        }
+
+        private static string Hostname(double random)
+        {
+            if (random > 02) return "Web01";
+            return null;
         }
 
         private static string Category(double random)
@@ -146,12 +205,25 @@ namespace Elmah.Io.Cli
             return null;
         }
 
+        private static string Detail(double random)
+        {
+            if (random > 0.2) return DotNetStackTrace;
+            return null;
+        }
+
         private static string Title(double random)
         {
+            if (random > 0.7) return "An unhandled exception has occurred while executing the \"request\".";
             if (random > 0.5) return "Object reference not set to an instance of an object.";
             if (random > 0.2)
                 return "The controller for path '/api/test' was not found or does not implement IController.";
             return "Processing request";
+        }
+
+        private static string TitleTemplate(double random)
+        {
+            if (random > 0.7) return "An unhandled exception has occurred while executing the {action}.";
+            return Title(random);
         }
 
         private static int? StatusCode(double random)
