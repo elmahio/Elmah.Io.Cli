@@ -20,8 +20,8 @@ namespace Elmah.Io.Cli.Diagnose
             if (File.Exists(programPath))
             {
                 var programCs = File.ReadAllText(programPath);
-                if (!programCs.Contains(".AddElmahIo("))
-                    ReportError("A call to AddElmahIo was not found in Program.cs.");
+                if (!programCs.Contains(".AddElmahIo(") || !programCs.Contains("using Elmah.Io.Extensions.Logging"))
+                    ReportError("A call to AddElmahIo was not found in Program.cs. Both Elmah.Io.Extensions.Logging and Elmah.Io.AspNetCore provide a method named AddElmahIo. Make sure to call both if you have both packages installed.");
 
                 var apiKeyLookup = LookupString(programCs, ".AddElmahIo(", ".ApiKey = \"", 32);
                 if (apiKeyLookup != null) apiKey = apiKeyLookup;
