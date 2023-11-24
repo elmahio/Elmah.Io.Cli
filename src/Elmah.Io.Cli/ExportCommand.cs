@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Elmah.Io.Client;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Spectre.Console;
 using System;
@@ -52,11 +53,6 @@ namespace Elmah.Io.Cli
                     else
                     {
                         int messSum = startResult.Total.Value;
-                        if (messSum > 10000)
-                        {
-                            AnsiConsole.MarkupLine("[#ffc936]Query returned more than 10,000 messages. The exporter will cap at 10,000 messages. Consider using the -DateFrom, -DateTo, and/or the -Query parameters to limit the search result.[/]");
-                            messSum = 10000;
-                        }
 
                         await AnsiConsole
                             .Progress()
@@ -71,18 +67,26 @@ namespace Elmah.Io.Cli
                                 if (File.Exists(filename)) File.Delete(filename);
                                 using (StreamWriter w = File.AppendText(filename))
                                 {
-                                    int i = 0;
+                                    string searchAfter = null;
+                                    var firstMessage = true;
                                     w.WriteLine("[");
-                                    while (i < messSum)
+                                    while (true)
                                     {
-                                        var respons = await api.Messages.GetAllAsync(logId.ToString(), i / 10, 10, query, dateFrom, dateTo, includeHeaders);
-                                        foreach (Client.MessageOverview message in respons.Messages)
+                                        var response = await api.Messages.GetAllAsync(logId.ToString(), pageSize: 100, query: query, from: dateFrom, to: dateTo, includeHeaders: includeHeaders, searchAfter: searchAfter);
+                                        if (response.Messages.Count == 0)
                                         {
+                                            task.Increment(task.MaxValue - task.Value);
+                                            task.StopTask();
+                                            break;
+                                        }
+                                        foreach (MessageOverview message in response.Messages)
+                                        {
+                                            if (!firstMessage) w.WriteLine(",");
+                                            firstMessage = false;
                                             w.WriteLine(JToken.Parse(JsonConvert.SerializeObject(message)).ToString(Formatting.Indented));
-                                            i++;
-                                            if (i != messSum) w.WriteLine(",");
                                             task.Increment(1);
                                         }
+                                        searchAfter = response.SearchAfter;
                                     }
                                     w.WriteLine("]");
                                 }
