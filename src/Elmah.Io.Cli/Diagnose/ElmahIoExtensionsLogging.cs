@@ -6,10 +6,12 @@ namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIoExtensionsLogging : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
+        private const string PackageName = "Elmah.Io.Extensions.Logging";
+
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
-            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Extensions.Logging[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.extensions.logging");
+            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
+            DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
             var programPath = Path.Combine(projectDir.FullName, "Program.cs");
@@ -21,7 +23,7 @@ namespace Elmah.Io.Cli.Diagnose
             {
                 var programCs = File.ReadAllText(programPath);
                 if (!programCs.Contains(".AddElmahIo(") || !programCs.Contains("using Elmah.Io.Extensions.Logging"))
-                    ReportError("A call to AddElmahIo was not found in Program.cs. Both Elmah.Io.Extensions.Logging and Elmah.Io.AspNetCore provide a method named AddElmahIo. Make sure to call both if you have both packages installed.");
+                    ReportError($"A call to [invert]AddElmahIo[/] was not found in [invert]Program.cs[/]. Both [rgb(13,165,142)]{PackageName}[/] and [rgb(13,165,142)]Elmah.Io.AspNetCore[/] provide a method named [invert]AddElmahIo[/]. Make sure to call both if you have both packages installed.");
 
                 var apiKeyLookup = LookupString(programCs, ".AddElmahIo(", ".ApiKey = \"", 32);
                 if (apiKeyLookup != null) apiKey = apiKeyLookup;
@@ -43,6 +45,15 @@ namespace Elmah.Io.Cli.Diagnose
             }
 
             DiagnoseKeys(apiKey, logId, verbose);
+
+            if (!hints.ContainsKey(PackageName))
+            {
+                hints.Add(PackageName, new List<string>
+                {
+                    "Make sure that you are calling the [invert]AddElmahIo[/] method in the [grey]Program.cs[/] file.",
+                    "Make sure that the logging configuration in both code and the [grey]appsettings.json[/] file allows the log severity you are expecting to see in elmah.io.",
+                });
+            }
         }
     }
 }

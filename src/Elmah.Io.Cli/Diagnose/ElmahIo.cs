@@ -6,7 +6,7 @@ namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIo : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, verbose, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
@@ -39,6 +39,15 @@ namespace Elmah.Io.Cli.Diagnose
             else
             {
                 ReportError("Web.config file not found.");
+            }
+
+            if (!hints.ContainsKey("Elmah.Io"))
+            {
+                hints.Add("Elmah.Io", new List<string>
+                {
+                    "Make sure that you have the [rgb(13,165,142)]elmah.corelibrary[/] NuGet package installed in the latest stable version.",
+                    "Make sure that your [grey]web.config[/] file is valid and that it contains the ELMAH configuration.",
+                });
             }
         }
     }

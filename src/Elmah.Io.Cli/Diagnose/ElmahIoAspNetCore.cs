@@ -6,10 +6,12 @@ namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIoAspNetCore : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
+        private const string PackageName = "Elmah.Io.AspNetCore";
+
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
-            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.AspNetCore[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.aspnetcore");
+            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
+            DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
             var startupPath = Path.Combine(projectDir.FullName, "Startup.cs");
@@ -50,7 +52,7 @@ namespace Elmah.Io.Cli.Diagnose
             }
 
             if (!foundElmahIoConfig)
-                ReportError("A call to AddElmahIo and UseElmahIo was not found in Startup.cs or Program.cs.");
+                ReportError("A call to [invert]AddElmahIo[/] and [invert]UseElmahIo[/] was not found in [grey]Startup.cs[/] or [grey]Program.cs[/].");
 
             else if (foundElmahIoConfig && !string.IsNullOrWhiteSpace(fileWithElmahConfig))
             {
@@ -66,23 +68,23 @@ namespace Elmah.Io.Cli.Diagnose
                 var useUmbracoIndex = fileWithElmahConfig.IndexOf(".UseUmbraco(");
 
                 if (useDeveloperExceptionPageIndex != -1 && index < useDeveloperExceptionPageIndex)
-                    ReportError("UseElmahIo must be called after UseDeveloperExceptionPage");
+                    ReportError("[invert]UseElmahIo[/] must be called after [invert]UseDeveloperExceptionPage[/]");
                 else if (useExceptionHandlerIndex != -1 && index < useExceptionHandlerIndex)
-                    ReportError("UseElmahIo must be called after UseExceptionHandler");
+                    ReportError("[invert]UseElmahIo[/] must be called after [invert]UseExceptionHandler[/]");
                 else if (useAuthorizationIndex != -1 && index < useAuthorizationIndex)
-                    ReportError("UseElmahIo must be called after UseAuthorization");
+                    ReportError("[invert]UseElmahIo[/] must be called after [invert]UseAuthorization[/]");
                 else if (useAuthenticationIndex != -1 && index < useAuthenticationIndex)
-                    ReportError("UseElmahIo must be called after UseAuthentication");
+                    ReportError("[invert]UseElmahIo[/] must be called after [invert]UseAuthentication[/]");
                 else if (useEndpointsIndex != -1 && index > useEndpointsIndex)
-                    ReportError("UseElmahIo must be called before UseEndpoints");
+                    ReportError("[invert]UseElmahIo[/] must be called before [invert]UseEndpoints[/]");
                 else if (mapControllerRouteIndex != -1 && index > mapControllerRouteIndex)
-                    ReportError("UseElmahIo must be called before MapControllerRoute");
+                    ReportError("[invert]UseElmahIo[/] must be called before [invert]MapControllerRoute[/]");
                 else if (useMvcIndex != -1 && index > useMvcIndex)
-                    ReportError("UseElmahIo must be called before UseMvc");
+                    ReportError("[invert]UseElmahIo[/] must be called before [invert]UseMvc[/]");
                 else if (usePiranhaIndex != -1 && index > usePiranhaIndex)
-                    ReportError("UseElmahIo must be called before UsePiranha");
+                    ReportError("[invert]UseElmahIo[/] must be called before [invert]UsePiranha[/]");
                 else if (useUmbracoIndex != -1 && index > useUmbracoIndex)
-                    ReportError("UseElmahIo must be called before UseUmbraco");
+                    ReportError("[invert]UseElmahIo[/] must be called before [invert]UseUmbraco[/]");
             }
 
             // If we haven't found API key and log ID yet, try looking in appsettings.json
@@ -99,6 +101,16 @@ namespace Elmah.Io.Cli.Diagnose
             }
 
             DiagnoseKeys(apiKey, logId, verbose);
+
+            if (!hints.ContainsKey(PackageName))
+            {
+                hints.Add(PackageName, new List<string>
+                {
+                    "Make sure that you are calling both the [invert]AddElmahIo[/] and [invert]UseElmahIo[/] methods in the [grey]Program.cs[/] or [grey]Startup.cs[/] file.",
+                    "Make sure that you call the [invert]UseElmahIo[/] method after invoking other [invert]Use*[/] methods that in any way inspect exceptions (like [invert]UseDeveloperExceptionPage[/] and [invert]UseExceptionHandler[/]).",
+                    "Make sure that you call the [invert]UseElmahIo[/] method before invoking [invert]UseMvc[/], [invert]UseEndpoints[/], and similar.",
+                });
+            }
         }
     }
 }

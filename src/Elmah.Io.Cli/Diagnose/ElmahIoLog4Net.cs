@@ -7,10 +7,12 @@ namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIoLog4Net : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
+        private const string PackageName = "Elmah.Io.Log4Net";
+
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
-            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.Log4Net[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.log4net");
+            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
+            DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -57,6 +59,15 @@ namespace Elmah.Io.Cli.Diagnose
             else if (verbose)
             {
                 AnsiConsole.MarkupLine("[grey]No file content found for log4net[/]");
+            }
+
+            if (!hints.ContainsKey(PackageName))
+            {
+                hints.Add(PackageName, new List<string>
+                {
+                    $"Make sure that your [grey]log4net.config[/] file is valid and contains the code for [rgb(13,165,142)]{PackageName}[/].",
+                    "Include the following app setting in the [grey]app.config[/]/[grey]web.config[/] file to enable log4net's internal logger and inspect the console for any errors: [invert]<add key=\"log4net.Internal.Debug\" value=\"true\"/>[/]."
+                });
             }
         }
     }

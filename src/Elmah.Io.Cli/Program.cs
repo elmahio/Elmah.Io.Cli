@@ -1,4 +1,5 @@
 ﻿using Spectre.Console;
+using System;
 using System.CommandLine;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +10,8 @@ namespace Elmah.Io.Cli
     {
         static async Task<int> Main(string[] args)
         {
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+
             var rootCommand = new RootCommand("CLI for executing various actions against elmah.io")
             {
                 new Option<bool>("--nologo", "Doesn't display the startup banner or the copyright message"),
@@ -28,7 +31,7 @@ namespace Elmah.Io.Cli
             {
                 AnsiConsole.Write(new FigletText("elmah.io")
                         .Color(new Color(13, 165, 142)));
-                AnsiConsole.MarkupLine("[yellow]Copyright (C)[/] [rgb(13,165,142)]elmah.io[/]. All rights reserved.");
+                AnsiConsole.MarkupLine("[yellow]Copyright :copyright:[/] [rgb(13,165,142)]elmah.io[/]. All rights reserved.");
             }
 
             args = args.Where(arg => arg != "--nologo").ToArray();

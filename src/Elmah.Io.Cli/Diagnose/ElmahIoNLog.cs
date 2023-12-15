@@ -7,10 +7,12 @@ namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIoNLog : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose)
+        private const string PackageName = "Elmah.Io.NLog";
+
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
-            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io.NLog[/] in [grey]{packageFile.FullName}[/].");
-            DiagnosePackageVersion(packagesFound, verbose, "elmah.io.nlog");
+            AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
+            DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
@@ -42,7 +44,7 @@ namespace Elmah.Io.Cli.Diagnose
             {
                 foundElmahIoConfig = true;
                 fileContent = File.ReadAllText(nlogConfigPath);
-                AnsiConsole.MarkupLine("Validating nlog.config. Any errors may be resolved by changing the target type from [grey]elmah.io[/] to [grey]elmahio:elmah.io[/].");
+                AnsiConsole.MarkupLine("Validating [grey]nlog.config[/]. Any errors may be resolved by changing the target type from [invert]elmah.io[/] to [invert]elmahio:elmah.io[/].");
                 ValidateXmlAgainstSchema(
                     "nlog.config",
                     fileContent,
@@ -73,6 +75,16 @@ namespace Elmah.Io.Cli.Diagnose
             else if (verbose)
             {
                 AnsiConsole.MarkupLine("[grey]No file content found for log4net[/]");
+            }
+
+            if (!hints.ContainsKey(PackageName))
+            {
+                hints.Add(PackageName, new List<string>
+                {
+                    $"Make sure that your [grey]nlog.config[/] file is valid and contains the code for [rgb(13,165,142)]{PackageName}[/].",
+                    "Always make sure to call [invert]LogManager.Shutdown()[/] before exiting the application to make sure that all log messages are flushed.",
+                    "Extend the [invert]nlog[/] element with [invert]internalLogLevel=\"Warn\" internalLogFile=\"c:\\temp\\nlog-internal.log[/] and inspect that log file for any internal NLog errors.",
+                });
             }
         }
     }

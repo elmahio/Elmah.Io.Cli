@@ -81,7 +81,7 @@ namespace Elmah.Io.Cli.Diagnose
 
         protected static void ReportError(string message)
         {
-            AnsiConsole.MarkupLine($"[red]- {message}[/]");
+            AnsiConsole.MarkupLine($"[red]:cross_mark: {message}[/]");
             FoundError = true;
         }
 

@@ -45,6 +45,8 @@ namespace Elmah.Io.Cli
                     return;
                 }
 
+                var hintsByPackage = new Dictionary<string, List<string>>();
+
                 AnsiConsole.Status()
                     .Spinner(Spinner.Known.Star)
                     .Start("Working...", ctx => {
@@ -54,26 +56,55 @@ namespace Elmah.Io.Cli
                             if (verbose && packagesFound.Count == 0) AnsiConsole.MarkupLine("[grey]No packages found[/]");
 
                             if (packagesFound.ContainsKey("elmah.io.aspnetcore"))
-                                ElmahIoAspNetCore.Diagnose(packageFile, packagesFound, verbose);
+                                ElmahIoAspNetCore.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
 
                             if (packagesFound.ContainsKey("elmah.io.extensions.logging"))
-                                ElmahIoExtensionsLogging.Diagnose(packageFile, packagesFound, verbose);
+                                ElmahIoExtensionsLogging.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
 
                             if (packagesFound.ContainsKey("elmah.io") || packagesFound.ContainsKey("elmah.io.mvc") || packagesFound.ContainsKey("elmah.io.webapi") || packagesFound.ContainsKey("elmah.io.aspnet"))
-                                ElmahIo.Diagnose(packageFile, packagesFound, verbose);
+                                ElmahIo.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
 
                             if (packagesFound.ContainsKey("elmah.io.log4net"))
-                                ElmahIoLog4Net.Diagnose(packageFile, packagesFound, verbose);
+                                ElmahIoLog4Net.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
 
                             if (packagesFound.ContainsKey("elmah.io.nlog"))
-                                ElmahIoNLog.Diagnose(packageFile, packagesFound, verbose);
+                                ElmahIoNLog.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
 
                             if (packagesFound.ContainsKey("serilog.sinks.elmahio"))
-                                SerilogSinksElmahIo.Diagnose(packageFile, packagesFound, verbose);
+                                SerilogSinksElmahIo.Diagnose(packageFile, packagesFound, verbose, hintsByPackage);
                         }
                     });
 
-                if (!FoundError) AnsiConsole.MarkupLine("[green]No issues found[/]");
+                if (!FoundError)
+                {
+                    var rule = new Rule("[green]No issues found[/]");
+                    rule.Style = Style.Parse("green");
+                    rule.Justification = Justify.Left;
+                    AnsiConsole.Write(rule);
+                }
+
+                Console.WriteLine();
+                AnsiConsole.MarkupLine($"If you are still experiencing problems logging to elmah.io here are some things to try out.");
+                Console.WriteLine();
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that all [rgb(13,165,142)]Elmah.Io.*[/] NuGet packages are referencing the newest stable version.");
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that the API key is valid and allow the Messages Write permission.");
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that your server has an outgoing internet connection and that it can communicate with [invert]api.elmah.io:443[/].");
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that you didn't enable any Ignore filters or set up any Rules with an ignore action on the log.");
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that you don't have any code catching all exceptions happening in your system and ignoring them (could be a logging filter, a piece of middleware, or similar).");
+                AnsiConsole.MarkupLine(":light_bulb: Make sure that you haven't reached the message limit included in your current plan. Your current usage can be viewed on the Subscription tab on organization settings.");
+
+                foreach (var package in hintsByPackage)
+                {
+                    Console.WriteLine();
+                    var table = new Table();
+                    table.Border(TableBorder.Rounded);
+                    table.AddColumn($":package: [rgb(13,165,142)]{package.Key}[/]");
+                    foreach (var hint in package.Value)
+                    {
+                        table.AddRow($":light_bulb: {hint}");
+                    }
+                    AnsiConsole.Write(table);
+                }
             }, directoryOption, verboseOption);
 
             return diagnoseCommand;
