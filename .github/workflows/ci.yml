@@ -22,6 +22,20 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
 
+    - name: Check for vulnerable packages
+      run: |
+        set -e # This will cause the script to exit on the first error
+        OUTPUT=$(dotnet list package --vulnerable)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q 'no vulnerable packages'; then
+          echo "No vulnerable packages found"
+        else
+          if echo "$OUTPUT" | grep -q 'vulnerable'; then
+            echo "Vulnerable packages found"
+            exit 1
+          fi
+        fi
+
     - name: Build win-x64
       run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 --self-contained -o elmahio-win-x64 /p:AssemblyVersion=5.1.${{ github.run_number }}
 
