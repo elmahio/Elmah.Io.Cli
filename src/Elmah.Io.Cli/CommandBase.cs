@@ -7,7 +7,7 @@ namespace Elmah.Io.Cli
 {
     abstract class CommandBase
     {
-        internal static string _assemblyVersion = typeof(CommandBase).Assembly.GetName().Version.ToString();
+        internal static readonly string _assemblyVersion = typeof(CommandBase).Assembly.GetName().Version.ToString();
 
         protected static IElmahioAPI Api(string apiKey)
         {

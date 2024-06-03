@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Elmah.Io.Cli
 {
-    class Program
+    static class Program
     {
         static async Task<int> Main(string[] args)
         {
@@ -27,7 +27,7 @@ namespace Elmah.Io.Cli
             rootCommand.AddCommand(SourceMapCommand.Create());
             rootCommand.AddCommand(TailCommand.Create());
 
-            if (args == null || args.All(arg => arg != "--nologo"))
+            if (args == null || args.ToList().TrueForAll(arg => arg != "--nologo"))
             {
                 AnsiConsole.Write(new FigletText("elmah.io")
                         .Color(new Color(13, 165, 142)));

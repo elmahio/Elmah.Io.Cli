@@ -11,6 +11,8 @@ namespace Elmah.Io.Cli
 {
     class DiagnoseCommand : DiagnoseBase
     {
+        private static readonly string[] ignoreDirs = [".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules"];
+
         internal static Command Create()
         {
             var directoryOption = new Option<string>("--directory", () => Directory.GetCurrentDirectory(), "The root directory to check");
@@ -31,15 +33,13 @@ namespace Elmah.Io.Cli
 
                 AnsiConsole.MarkupLine($"Running diagnose in [grey]{directory}[/]");
 
-                var ignoreDirs = new[] { ".git", ".github", ".vs", ".vscode", "bin", "obj", "packages", "node_modules" };
-
                 var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true };
                 var filesWithPackages = rootDir
                     .EnumerateFiles("*.csproj", options)
                     .Where(f => !ignoreDirs.Contains(f.DirectoryName))
                     .Concat(rootDir.EnumerateFiles("packages.config", options).Where(f => !ignoreDirs.Contains(f.DirectoryName)));
 
-                if (filesWithPackages.Count() == 0)
+                if (!filesWithPackages.Any())
                 {
                     AnsiConsole.MarkupLine("[red]No project or packages files found[/]");
                     return;
@@ -49,7 +49,8 @@ namespace Elmah.Io.Cli
 
                 AnsiConsole.Status()
                     .Spinner(Spinner.Known.Star)
-                    .Start("Working...", ctx => {
+                    .Start("Working...", ctx =>
+                    {
                         foreach (var packageFile in filesWithPackages)
                         {
                             var packagesFound = FindPackages(packageFile, verbose);
@@ -77,31 +78,43 @@ namespace Elmah.Io.Cli
 
                 if (!FoundError)
                 {
-                    var rule = new Rule("[green]No issues found[/]");
-                    rule.Style = Style.Parse("green");
-                    rule.Justification = Justify.Left;
+                    var rule = new Rule("[green]No issues found[/]")
+                    {
+                        Style = Style.Parse("green"),
+                        Justification = Justify.Left
+                    };
                     AnsiConsole.Write(rule);
                 }
 
                 Console.WriteLine();
                 AnsiConsole.MarkupLine($"If you are still experiencing problems logging to elmah.io here are some things to try out.");
                 Console.WriteLine();
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that all [rgb(13,165,142)]Elmah.Io.*[/] NuGet packages are referencing the newest stable version.");
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that the API key is valid and allow the Messages Write permission.");
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that your server has an outgoing internet connection and that it can communicate with [invert]api.elmah.io:443[/].");
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that you didn't enable any Ignore filters or set up any Rules with an ignore action on the log.");
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that you don't have any code catching all exceptions happening in your system and ignoring them (could be a logging filter, a piece of middleware, or similar).");
-                AnsiConsole.MarkupLine(":light_bulb: Make sure that you haven't reached the message limit included in your current plan. Your current usage can be viewed on the Subscription tab on organization settings.");
+                var generalTable = new Table().NoBorder().HideHeaders();
+                generalTable.AddColumn(new TableColumn("").Width(2));
+                generalTable.AddColumn(new TableColumn(""));
+
+                generalTable.AddRow(":light_bulb:", "Make sure that all [rgb(13,165,142)]Elmah.Io.*[/] NuGet packages are referencing the newest stable version.");
+                generalTable.AddRow(":light_bulb:", "Make sure that the API key is valid and allow the Messages Write permission.");
+                generalTable.AddRow(":light_bulb:", "Make sure that your server has an outgoing internet connection and that it can communicate with [invert]api.elmah.io:443[/].");
+                generalTable.AddRow(":light_bulb:", "Make sure that you didn't enable any Ignore filters or set up any Rules with an ignore action on the log.");
+                generalTable.AddRow(":light_bulb:", "Make sure that you don't have any code catching all exceptions happening in your system and ignoring them (could be a logging filter, a piece of middleware, or similar).");
+                generalTable.AddRow(":light_bulb:", "Make sure that you haven't reached the message limit included in your current plan. Your current usage can be viewed on the Subscription tab on organization settings.");
+                AnsiConsole.Write(generalTable);
 
                 foreach (var package in hintsByPackage)
                 {
                     Console.WriteLine();
-                    var table = new Table();
-                    table.Border(TableBorder.Rounded);
-                    table.AddColumn($":package: [rgb(13,165,142)]{package.Key}[/]");
+                    var rule = new Rule($":package: [rgb(13,165,142)]{package.Key}[/]")
+                    {
+                        Justification = Justify.Left
+                    };
+                    AnsiConsole.Write(rule);
+                    var table = new Table().NoBorder().HideHeaders();
+                    table.AddColumn(new TableColumn("").Width(2));
+                    table.AddColumn(new TableColumn(""));
                     foreach (var hint in package.Value)
                     {
-                        table.AddRow($":light_bulb: {hint}");
+                        table.AddRow(":light_bulb:", hint);
                     }
                     AnsiConsole.Write(table);
                 }
@@ -129,7 +142,7 @@ namespace Elmah.Io.Cli
                         .Elements(ns + "PackageReference")
                         .Where(pr => pr.Attribute("Include") != null && (pr.Attribute("Include").Value.StartsWith("elmah.io", StringComparison.InvariantCultureIgnoreCase) || pr.Attribute("Include").Value.Equals("serilog.sinks.elmahio", StringComparison.InvariantCultureIgnoreCase)))))
                 {
-                    packages.Add(pr.Attribute("Include").Value.ToLower(), pr.Attribute("Version") != null ? pr.Attribute("Version").Value : null);
+                    packages.Add(pr.Attribute("Include").Value.ToLower(), pr.Attribute("Version")?.Value);
                 }
             }
             else if (packageFile.Name.Equals("packages.config", StringComparison.InvariantCultureIgnoreCase))
@@ -141,7 +154,7 @@ namespace Elmah.Io.Cli
 
                 foreach (var package in packageElements)
                 {
-                    packages.Add(package.Attribute("id").Value.ToLower(), package.Attribute("version") != null ? package.Attribute("version").Value : null);
+                    packages.Add(package.Attribute("id").Value.ToLower(), package.Attribute("version")?.Value);
                 }
             }
 

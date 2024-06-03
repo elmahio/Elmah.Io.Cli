@@ -85,7 +85,7 @@ namespace Elmah.Io.Cli
             return logCommand;
         }
 
-        private class MessageModel
+        private sealed class MessageModel
         {
             public string Application { get; set; }
             public string Detail { get; set; }
@@ -105,44 +105,24 @@ namespace Elmah.Io.Cli
             public string Category { get; set; }
         }
 
-        private class MessageModelBinder : BinderBase<MessageModel>
+        private sealed class MessageModelBinder(Option<string> applicationOption, Option<string> detailOption, Option<string> hostnameOption, Option<string> titleOption, Option<string> titleTemplateOption, Option<string> sourceOption, Option<int> statusCodeOption, Option<DateTimeOffset?> dateTimeOption, Option<string> typeOption, Option<string> userOption, Option<string> severityOption, Option<string> urlOption, Option<string> methodOption, Option<string> versionOption, Option<string> correlationIdOption, Option<string> categoryOption) : BinderBase<MessageModel>
         {
-            private Option<string> applicationOption;
-            private Option<string> detailOption;
-            private Option<string> hostnameOption;
-            private Option<string> titleOption;
-            private Option<string> titleTemplateOption;
-            private Option<string> sourceOption;
-            private Option<int> statusCodeOption;
-            private Option<DateTimeOffset?> dateTimeOption;
-            private Option<string> typeOption;
-            private Option<string> userOption;
-            private Option<string> severityOption;
-            private Option<string> urlOption;
-            private Option<string> methodOption;
-            private Option<string> versionOption;
-            private Option<string> correlationIdOption;
-            private readonly Option<string> categoryOption;
-
-            public MessageModelBinder(Option<string> applicationOption, Option<string> detailOption, Option<string> hostnameOption, Option<string> titleOption, Option<string> titleTemplateOption, Option<string> sourceOption, Option<int> statusCodeOption, Option<DateTimeOffset?> dateTimeOption, Option<string> typeOption, Option<string> userOption, Option<string> severityOption, Option<string> urlOption, Option<string> methodOption, Option<string> versionOption, Option<string> correlationIdOption, Option<string> categoryOption)
-            {
-                this.applicationOption = applicationOption;
-                this.detailOption = detailOption;
-                this.hostnameOption = hostnameOption;
-                this.titleOption = titleOption;
-                this.titleTemplateOption = titleTemplateOption;
-                this.sourceOption = sourceOption;
-                this.statusCodeOption = statusCodeOption;
-                this.dateTimeOption = dateTimeOption;
-                this.typeOption = typeOption;
-                this.userOption = userOption;
-                this.severityOption = severityOption;
-                this.urlOption = urlOption;
-                this.methodOption = methodOption;
-                this.versionOption = versionOption;
-                this.correlationIdOption = correlationIdOption;
-                this.categoryOption = categoryOption;
-            }
+            private readonly Option<string> applicationOption = applicationOption;
+            private readonly Option<string> detailOption = detailOption;
+            private readonly Option<string> hostnameOption = hostnameOption;
+            private readonly Option<string> titleOption = titleOption;
+            private readonly Option<string> titleTemplateOption = titleTemplateOption;
+            private readonly Option<string> sourceOption = sourceOption;
+            private readonly Option<int> statusCodeOption = statusCodeOption;
+            private readonly Option<DateTimeOffset?> dateTimeOption = dateTimeOption;
+            private readonly Option<string> typeOption = typeOption;
+            private readonly Option<string> userOption = userOption;
+            private readonly Option<string> severityOption = severityOption;
+            private readonly Option<string> urlOption = urlOption;
+            private readonly Option<string> methodOption = methodOption;
+            private readonly Option<string> versionOption = versionOption;
+            private readonly Option<string> correlationIdOption = correlationIdOption;
+            private readonly Option<string> categoryOption = categoryOption;
 
             protected override MessageModel GetBoundValue(BindingContext bindingContext)
             {

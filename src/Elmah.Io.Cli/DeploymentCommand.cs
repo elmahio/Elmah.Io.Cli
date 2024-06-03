@@ -30,7 +30,7 @@ namespace Elmah.Io.Cli
                 var api = Api(apiKey);
                 try
                 {
-                    var result = await api.Deployments.CreateAsync(new Client.CreateDeployment
+                    await api.Deployments.CreateAsync(new Client.CreateDeployment
                     {
                         Version = version,
                         Created = created,

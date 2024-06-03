@@ -42,7 +42,7 @@ namespace Elmah.Io.Cli
                             from = now;
                             previous.Clear();
                             continue;
-                        };
+                        }
 
                         int total = result.Total.Value;
                         int i = 0;
@@ -56,7 +56,7 @@ namespace Elmah.Io.Cli
 
                         previous.Clear();
 
-                        foreach (var message in messages.OrderBy(msg => msg.DateTime.Value))
+                        foreach (var message in messages?.OrderBy(msg => msg.DateTime.Value))
                         {
                             var table = new Table();
                             table.HideHeaders();
@@ -81,23 +81,16 @@ namespace Elmah.Io.Cli
 
         private static string GetColor(string severity)
         {
-            switch(severity)
+            return severity switch
             {
-                case "Verbose":
-                    return "[#cccccc]";
-                case "Debug":
-                    return "[#95c1ba]";
-                case "Information":
-                    return "[#0da58e]";
-                case "Warning":
-                    return "[#ffc936]";
-                case "Error":
-                    return "[#e6614f]";
-                case "Fatal":
-                    return "[#993636]";
-            }
-
-            return "[#0da58e]";
+                "Verbose" => "[#cccccc]",
+                "Debug" => "[#95c1ba]",
+                "Information" => "[#0da58e]",
+                "Warning" => "[#ffc936]",
+                "Error" => "[#e6614f]",
+                "Fatal" => "[#993636]",
+                _ => "[#0da58e]",
+            };
         }
     }
 }

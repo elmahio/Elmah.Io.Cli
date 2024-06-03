@@ -58,25 +58,25 @@ namespace Elmah.Io.Cli
                                 await api.Messages.CreateAndNotifyAsync(logId, new CreateMessage
                                 {
                                     //Application = "Elmah.Io.DataLoader",
-                                    Cookies = new[]
-                                    {
+                                    Cookies =
+                                    [
                                         new Item("ASP.NET_SessionId", "lm5lbj35ehweehwha2ggsehh"),
                                         new Item("_ga", "GA1.3.1580453215.1783132008"),
-                                    },
+                                    ],
                                     Data = Data(r),
                                     DateTime = dateTime,
                                     Detail = Detail(r),
-                                    Form = new[]
-                                    {
+                                    Form =
+                                    [
                                         new Item ("Username", "Joshua"),
                                         new Item ("Password", "********"),
-                                    },
-                                    QueryString = new[]
-                                    {
+                                    ],
+                                    QueryString =
+                                    [
                                         new Item("logid", logId.ToString())
-                                    },
-                                    ServerVariables = new[]
-                                    {
+                                    ],
+                                    ServerVariables =
+                                    [
                                         new Item("REMOTE_ADDR", "1.1.1.1"),
                                         new Item("CERT_KEYSIZE", "256"),
                                         new Item("CONTENT_LENGTH", "0"),
@@ -86,7 +86,7 @@ namespace Elmah.Io.Cli
                                         new Item("HTTP_CF_IPCOUNTRY", "AU"),
                                         new Item("URL", Url(r)),
                                         new Item("HTTP_HOST", "foo.bar"),
-                                    },
+                                    ],
                                     Breadcrumbs = Breadcrumbs(r, dateTime),
                                     Hostname = Hostname(r),
                                     Severity = Severity(r),
@@ -125,19 +125,19 @@ namespace Elmah.Io.Cli
         {
             var items = new List<Item>
             {
-                new Item("Father", "Stephen Falken"),
+                new("Father", "Stephen Falken"),
             };
 
             if (random > 0.5)
             {
-                items.Add(new Item { Key = "X-ELMAHIO-EXCEPTIONINSPECTOR", Value = Inspector("System.NullReferenceException", "Object reference not set to an instance of an object.") });
+                items.Add(new("X-ELMAHIO-EXCEPTIONINSPECTOR", Inspector("System.NullReferenceException", "Object reference not set to an instance of an object.")));
             }
             else if (random > 0.2)
             {
-                items.Add(new Item { Key = "X-ELMAHIO-EXCEPTIONINSPECTOR", Value = Inspector("System.Net.HttpException", "The controller for path '/api/test' was not found or does not implement IController.") });
+                items.Add(new("X-ELMAHIO-EXCEPTIONINSPECTOR", Inspector("System.Net.HttpException", "The controller for path '/api/test' was not found or does not implement IController.")));
             }
 
-            return items.ToArray();
+            return [.. items];
         }
 
         private static string Inspector(string type, string message)
@@ -150,25 +150,25 @@ namespace Elmah.Io.Cli
                 Source = "Elmah.Io.Cli.exe",
                 Data = new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<string, string>("Data one", "Data one value"),
-                    new KeyValuePair<string, string>("Data two", "Data two value")
+                    new("Data one", "Data one value"),
+                    new("Data two", "Data two value")
                 },
                 ExceptionSpecific = new List<KeyValuePair<string, string>>
                 {
-                    new KeyValuePair<string, string>("Some arg", "Some value")
+                    new("Some arg", "Some value")
                 }
             });
         }
 
         private static List<Breadcrumb> Breadcrumbs(double random, DateTimeOffset end)
         {
-            if (random > 0.5) return new List<Breadcrumb>
-            {
+            if (random > 0.5) return
+            [
                 new Breadcrumb { DateTime = end.AddSeconds(-1), Action = "request", Message = "Navigating to URL", Severity = "Information" },
                 new Breadcrumb { DateTime = end.AddSeconds(-2), Action = "submit", Message = "Submitting form", Severity = "Information" },
-            };
+            ];
 
-            return new List<Breadcrumb>();
+            return [];
         }
 
         private static string Hostname(double random)

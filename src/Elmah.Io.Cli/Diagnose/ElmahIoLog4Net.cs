@@ -22,7 +22,7 @@ namespace Elmah.Io.Cli.Diagnose
 
             string fileContent = null;
 
-            bool FindConfig(string file)
+            static bool FindConfig(string file)
             {
                 return file.Contains("<log4net", StringComparison.InvariantCultureIgnoreCase)
                     && file.Contains("name=\"ElmahIoAppender\"", StringComparison.InvariantCultureIgnoreCase)
@@ -63,11 +63,11 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey(PackageName))
             {
-                hints.Add(PackageName, new List<string>
-                {
+                hints.Add(PackageName,
+                [
                     $"Make sure that your [grey]log4net.config[/] file is valid and contains the code for [rgb(13,165,142)]{PackageName}[/].",
                     "Include the following app setting in the [grey]app.config[/]/[grey]web.config[/] file to enable log4net's internal logger and inspect the console for any errors: [invert]<add key=\"log4net.Internal.Debug\" value=\"true\"/>[/]."
-                });
+                ]);
             }
         }
     }

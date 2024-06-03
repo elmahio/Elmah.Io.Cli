@@ -22,7 +22,7 @@ namespace Elmah.Io.Cli.Diagnose
 
             string fileContent = null;
 
-            bool FindConfig(string file)
+            static bool FindConfig(string file)
             {
                 return file.Contains("<nlog", StringComparison.InvariantCultureIgnoreCase)
                     && file.Contains("name=\"elmahio\"", StringComparison.InvariantCultureIgnoreCase)
@@ -79,12 +79,12 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey(PackageName))
             {
-                hints.Add(PackageName, new List<string>
-                {
+                hints.Add(PackageName,
+                [
                     $"Make sure that your [grey]nlog.config[/] file is valid and contains the code for [rgb(13,165,142)]{PackageName}[/].",
                     "Always make sure to call [invert]LogManager.Shutdown()[/] before exiting the application to make sure that all log messages are flushed.",
                     "Extend the [invert]nlog[/] element with [invert]internalLogLevel=\"Warn\" internalLogFile=\"c:\\temp\\nlog-internal.log[/] and inspect that log file for any internal NLog errors.",
-                });
+                ]);
             }
         }
     }

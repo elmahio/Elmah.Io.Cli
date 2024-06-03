@@ -48,11 +48,11 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey(PackageName))
             {
-                hints.Add(PackageName, new List<string>
-                {
+                hints.Add(PackageName,
+                [
                     "Make sure that you are calling the [invert]AddElmahIo[/] method in the [grey]Program.cs[/] file.",
                     "Make sure that the logging configuration in both code and the [grey]appsettings.json[/] file allows the log severity you are expecting to see in elmah.io.",
-                });
+                ]);
             }
         }
     }

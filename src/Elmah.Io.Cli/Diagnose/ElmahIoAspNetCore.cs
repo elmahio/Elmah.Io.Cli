@@ -52,9 +52,10 @@ namespace Elmah.Io.Cli.Diagnose
             }
 
             if (!foundElmahIoConfig)
+            {
                 ReportError("A call to [invert]AddElmahIo[/] and [invert]UseElmahIo[/] was not found in [grey]Startup.cs[/] or [grey]Program.cs[/].");
-
-            else if (foundElmahIoConfig && !string.IsNullOrWhiteSpace(fileWithElmahConfig))
+            }
+            else if (!string.IsNullOrWhiteSpace(fileWithElmahConfig))
             {
                 var index = fileWithElmahConfig.IndexOf(".UseElmahIo(");
                 var useDeveloperExceptionPageIndex = fileWithElmahConfig.IndexOf(".UseDeveloperExceptionPage(");
@@ -104,12 +105,12 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey(PackageName))
             {
-                hints.Add(PackageName, new List<string>
-                {
+                hints.Add(PackageName,
+                [
                     "Make sure that you are calling both the [invert]AddElmahIo[/] and [invert]UseElmahIo[/] methods in the [grey]Program.cs[/] or [grey]Startup.cs[/] file.",
                     "Make sure that you call the [invert]UseElmahIo[/] method after invoking other [invert]Use*[/] methods that in any way inspect exceptions (like [invert]UseDeveloperExceptionPage[/] and [invert]UseExceptionHandler[/]).",
                     "Make sure that you call the [invert]UseElmahIo[/] method before invoking [invert]UseMvc[/], [invert]UseEndpoints[/], and similar.",
-                });
+                ]);
             }
         }
     }

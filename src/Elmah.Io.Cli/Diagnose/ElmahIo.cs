@@ -43,11 +43,11 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey("Elmah.Io"))
             {
-                hints.Add("Elmah.Io", new List<string>
-                {
+                hints.Add("Elmah.Io",
+                [
                     "Make sure that you have the [rgb(13,165,142)]elmah.corelibrary[/] NuGet package installed in the latest stable version.",
                     "Make sure that your [grey]web.config[/] file is valid and that it contains the ELMAH configuration.",
-                });
+                ]);
             }
         }
     }

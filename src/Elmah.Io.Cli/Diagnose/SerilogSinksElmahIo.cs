@@ -38,12 +38,12 @@ namespace Elmah.Io.Cli.Diagnose
 
             if (!hints.ContainsKey(PackageName))
             {
-                hints.Add(PackageName, new List<string>
-                {
+                hints.Add(PackageName,
+                [
                     $"Make sure that your Serilog configuration calls the [invert].ElmahIo[/] method to set up the sink.",
                     "Always make sure to call [invert]Log.CloseAndFlush()[/] before exiting the application to make sure that all log messages are flushed.",
                     "Set up Serilog's SelfLog to inspect any errors happening inside Serilog or the elmah.io sink: [invert]Serilog.Debugging.SelfLog.Enable(msg => Debug.WriteLine(msg));[/].",
-                });
+                ]);
             }
         }
     }

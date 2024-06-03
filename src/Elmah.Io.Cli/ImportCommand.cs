@@ -98,10 +98,10 @@ namespace Elmah.Io.Cli
                 var parts = new List<string>();
                 var message = new CreateMessage
                 {
-                    ServerVariables = new List<Item>(),
-                    Data = new List<Item>(),
-                    QueryString = new List<Item>(),
-                    Cookies = new List<Item>(),
+                    ServerVariables = [],
+                    Data = [],
+                    QueryString = [],
+                    Cookies = [],
                 };
 
                 if (!string.IsNullOrWhiteSpace(line.c_ip) && line.c_ip != "-")
@@ -222,7 +222,7 @@ namespace Elmah.Io.Cli
                 var user = columns[1].Trim();
                 var date = columns[2].Trim();
                 var time = columns[3].Trim();
-                var service = columns[4].Trim(); 
+                var service = columns[4].Trim();
                 var serverName = columns[5].Trim();
                 var serverIp = columns[6].Trim();
                 var timeTaken = columns[7].Trim();
@@ -241,8 +241,8 @@ namespace Elmah.Io.Cli
                 var message = new CreateMessage
                 {
                     DateTime = dateTime,
-                    ServerVariables = new List<Item>(),
-                    Data = new List<Item>(),
+                    ServerVariables = [],
+                    Data = [],
                 };
                 var parts = new List<string>();
 

@@ -10,6 +10,7 @@ namespace Elmah.Io.Cli.Diagnose
 {
     abstract class DiagnoseBase : CommandBase
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S2223:Non-constant static fields should not be visible", Justification = "This is accessed from a subclass and needs to be set")]
         protected static bool FoundError = false;
 
         protected static void DiagnoseKeys(string apiKey, string logId, bool verbose)
@@ -110,16 +111,17 @@ namespace Elmah.Io.Cli.Diagnose
                 ReportError($"Error in {fileName}: {s.Message}");
             };
 
-            using (XmlReader xr = XmlReader.Create(r, xrs))
+            using XmlReader xr = XmlReader.Create(r, xrs);
+            try
             {
-                try
+                while (xr.Read())
                 {
-                    while (xr.Read()) { }
+                    // ValidationEventHandler will be called so we don't want to do anything else than read the stream
                 }
-                catch (Exception e)
-                {
-                    if (verbose) AnsiConsole.MarkupLine($"[grey]{e.Message}[/]");
-                }
+            }
+            catch (Exception e)
+            {
+                if (verbose) AnsiConsole.MarkupLine($"[grey]{e.Message}[/]");
             }
         }
     }
