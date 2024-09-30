@@ -1,8 +1,5 @@
 ﻿using Elmah.Io.Client;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Xml.Schema;
 using System.Xml;
 
@@ -13,7 +10,7 @@ namespace Elmah.Io.Cli.Diagnose
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Critical Code Smell", "S2223:Non-constant static fields should not be visible", Justification = "This is accessed from a subclass and needs to be set")]
         protected static bool FoundError = false;
 
-        protected static void DiagnoseKeys(string apiKey, string logId, bool verbose)
+        protected static void DiagnoseKeys(string? apiKey, string? logId, bool verbose)
         {
             if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(logId))
             {
@@ -49,7 +46,7 @@ namespace Elmah.Io.Cli.Diagnose
             }
         }
 
-        protected static string LookupString(string fileContent, string startAt, string start, int requiredLength)
+        protected static string? LookupString(string fileContent, string startAt, string start, int requiredLength)
         {
             var startAtIndex = fileContent.IndexOf(startAt, StringComparison.InvariantCultureIgnoreCase);
             if (startAtIndex == -1) return null;
@@ -61,7 +58,7 @@ namespace Elmah.Io.Cli.Diagnose
             return fileContent.Substring(beginAt, requiredLength);
         }
 
-        protected static void DiagnosePackageVersion(Dictionary<string, string> packagesFound, bool verbose, params string[] packageNames)
+        protected static void DiagnosePackageVersion(Dictionary<string, string?> packagesFound, bool verbose, params string[] packageNames)
         {
             var found = false;
             foreach (var packageName in packageNames)

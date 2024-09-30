@@ -1,7 +1,4 @@
 ﻿using Spectre.Console;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Elmah.Io.Cli.Diagnose
 {
@@ -9,18 +6,19 @@ namespace Elmah.Io.Cli.Diagnose
     {
         private const string PackageName = "Elmah.Io.Log4Net";
 
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string?> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
+            if (projectDir == null) return;
             var webConfigPath = Path.Combine(projectDir.FullName, "web.config");
             var appConfigPath = Path.Combine(projectDir.FullName, "app.config");
             var log4netConfigPath = Path.Combine(projectDir.FullName, "log4net.config");
             var foundElmahIoConfig = false;
 
-            string fileContent = null;
+            string? fileContent = null;
 
             static bool FindConfig(string file)
             {

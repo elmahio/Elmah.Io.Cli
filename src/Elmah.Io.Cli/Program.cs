@@ -1,8 +1,5 @@
 ﻿using Spectre.Console;
-using System;
 using System.CommandLine;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Elmah.Io.Cli
 {
@@ -34,7 +31,7 @@ namespace Elmah.Io.Cli
                 AnsiConsole.MarkupLine("[yellow]Copyright :copyright:[/] [rgb(13,165,142)]elmah.io[/]. All rights reserved.");
             }
 
-            args = args.Where(arg => arg != "--nologo").ToArray();
+            args = args?.Where(arg => arg != "--nologo").ToArray() ?? [];
             AnsiConsole.WriteLine();
 
             return await rootCommand.InvokeAsync(args);

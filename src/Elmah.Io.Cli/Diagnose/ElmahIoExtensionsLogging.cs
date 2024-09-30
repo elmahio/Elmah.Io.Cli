@@ -1,6 +1,4 @@
 ﻿using Spectre.Console;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Elmah.Io.Cli.Diagnose
 {
@@ -8,16 +6,17 @@ namespace Elmah.Io.Cli.Diagnose
     {
         private const string PackageName = "Elmah.Io.Extensions.Logging";
 
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string?> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
+            if (projectDir == null) return;
             var programPath = Path.Combine(projectDir.FullName, "Program.cs");
 
-            string apiKey = null;
-            string logId = null;
+            string? apiKey = null;
+            string? logId = null;
 
             if (File.Exists(programPath))
             {

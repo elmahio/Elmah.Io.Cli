@@ -8,12 +8,13 @@ namespace Elmah.Io.Cli.Diagnose
     {
         private const string PackageName = "Serilog.Sinks.ElmahIo";
 
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string?> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]{PackageName}[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, verbose, PackageName.ToLowerInvariant());
 
             var projectDir = packageFile.Directory;
+            if (projectDir == null) return;
             var options = new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true };
             var csFiles = projectDir.EnumerateFiles("*.cs", options);
             var foundElmahIoConfig = false;

@@ -1,13 +1,12 @@
 ﻿using Spectre.Console;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Elmah.Io.Cli.Diagnose
 {
     internal class ElmahIo : DiagnoseBase
     {
-        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
+        internal static void Diagnose(FileInfo packageFile, Dictionary<string, string?> packagesFound, bool verbose, Dictionary<string, List<string>> hints)
         {
+            if (packageFile.DirectoryName == null) return;
             AnsiConsole.MarkupLine($"Found [rgb(13,165,142)]Elmah.Io[/] in [grey]{packageFile.FullName}[/].");
             DiagnosePackageVersion(packagesFound, verbose, "elmah.io", "elmah.io.aspnet", "elmah.io.mvc", "elmah.io.webapi");
 

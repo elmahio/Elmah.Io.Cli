@@ -121,11 +121,11 @@ namespace Elmah.Io.Cli
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
 #pragma warning disable CS8604 // Possible null reference argument.
-        private static Dictionary<string, string> FindPackages(FileInfo packageFile, bool verbose)
+        private static Dictionary<string, string?> FindPackages(FileInfo packageFile, bool verbose)
         {
             var document = XDocument.Load(packageFile.FullName);
 
-            var packages = new Dictionary<string, string>();
+            var packages = new Dictionary<string, string?>();
 
             if (packageFile.Extension.Equals(".csproj", StringComparison.InvariantCultureIgnoreCase))
             {
