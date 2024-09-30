@@ -1,8 +1,6 @@
 ﻿using Elmah.Io.Client;
 using Newtonsoft.Json;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
 
 namespace Elmah.Io.Cli
@@ -18,6 +16,7 @@ namespace Elmah.Io.Cli
         const string DotNetStackTrace = @"Elmah.Io.TestException: This is a test exception that can be safely ignored.
 " + Stack;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Major Code Smell", "S2589:Boolean expressions should not be gratuitous", Justification = "<Pending>")]
         internal static Command Create()
         {
             var apiKeyOption = new Option<string>("--apiKey", description: "An API key with permission to execute the command")
@@ -28,31 +27,39 @@ namespace Elmah.Io.Cli
             {
                 IsRequired = true
             };
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
             var dataloaderCommand = new Command("dataloader", "Load 50 log messages into the specified log")
             {
-                apiKeyOption, logIdOption
+                apiKeyOption, logIdOption, proxyHostOption, proxyPortOption
             };
-            dataloaderCommand.SetHandler(async (apiKey, logId) =>
+            dataloaderCommand.SetHandler(async (apiKey, logId, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 var random = new Random();
                 var yesterday = DateTimeOffset.UtcNow.AddDays(-1);
+                var failed = false;
+                var numberOfMessages = 50;
                 await AnsiConsole
                     .Progress()
                     .StartAsync(async ctx =>
                     {
-                        var numberOfMessages = 50;
-
                         // Define tasks
                         var task = ctx.AddTask("Loading log messages", new ProgressTaskSettings
                         {
                             MaxValue = numberOfMessages,
                         });
 
+                        api.Messages.OnMessageFail += (object? sender, FailEventArgs e) =>
+                        {
+                            failed = true;
+                        };
+
                         try
                         {
                             for (var i = 0; i < numberOfMessages; i++)
                             {
+                                if (failed) break;
                                 var r = random.NextDouble();
                                 var dateTime = yesterday.AddMinutes(random.Next(1440));
                                 await api.Messages.CreateAndNotifyAsync(logId, new CreateMessage
@@ -107,7 +114,8 @@ namespace Elmah.Io.Cli
                         }
                         catch (Exception e)
                         {
-                            AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                            AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
+                            failed = true;
                         }
                         finally
                         {
@@ -115,8 +123,8 @@ namespace Elmah.Io.Cli
                         }
                     });
 
-                AnsiConsole.MarkupLine("[green]Successfully loaded [/][grey]50[/][green] log messages[/]");
-            }, apiKeyOption, logIdOption);
+                if (!failed) AnsiConsole.MarkupLine($"[green]Successfully loaded [/][grey]{numberOfMessages}[/][green] log messages[/]");
+            }, apiKeyOption, logIdOption, proxyHostOption, proxyPortOption);
 
             return dataloaderCommand;
         }
@@ -171,41 +179,41 @@ namespace Elmah.Io.Cli
             return [];
         }
 
-        private static string Hostname(double random)
+        private static string?Hostname(double random)
         {
             if (random > 02) return "Web01";
             return null;
         }
 
-        private static string Category(double random)
+        private static string? Category(double random)
         {
             if (random > 0.5) return "Microsoft.Hosting.Lifetime";
             if (random > 0.2) return "Elmah.Io";
             return null;
         }
 
-        private static string Method(double random)
+        private static string? Method(double random)
         {
             if (random > 0.5) return "POST";
             if (random > 0.2) return "GET";
             return null;
         }
 
-        private static string Url(double random)
+        private static string? Url(double random)
         {
             if (random > 0.5) return "/api/process";
             if (random > 0.2) return "/api/test";
             return null;
         }
 
-        private static string Type(double random)
+        private static string? Type(double random)
         {
             if (random > 0.5) return "System.NullReferenceException";
             if (random > 0.2) return "System.Net.HttpException";
             return null;
         }
 
-        private static string Detail(double random)
+        private static string? Detail(double random)
         {
             if (random > 0.2) return DotNetStackTrace;
             return null;
@@ -240,7 +248,7 @@ namespace Elmah.Io.Cli
             return "Information";
         }
 
-        private static string User(double random)
+        private static string? User(double random)
         {
             if (random > 0.7) return "thomas@elmah.io";
             if (random > 0.4) return "info@elmah.io";

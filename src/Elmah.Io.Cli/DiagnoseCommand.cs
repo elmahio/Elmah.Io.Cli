@@ -1,10 +1,6 @@
 ﻿using Elmah.Io.Cli.Diagnose;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 
 namespace Elmah.Io.Cli
@@ -123,6 +119,8 @@ namespace Elmah.Io.Cli
             return diagnoseCommand;
         }
 
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+#pragma warning disable CS8604 // Possible null reference argument.
         private static Dictionary<string, string> FindPackages(FileInfo packageFile, bool verbose)
         {
             var document = XDocument.Load(packageFile.FullName);
@@ -131,18 +129,26 @@ namespace Elmah.Io.Cli
 
             if (packageFile.Extension.Equals(".csproj", StringComparison.InvariantCultureIgnoreCase))
             {
-                var ns = document.Root.GetDefaultNamespace();
-                var project = document.Element(ns + "Project");
-                var itemGroups = project
-                    .Elements(ns + "ItemGroup")
-                    .ToList();
-
-                foreach (var pr in itemGroups
-                    .SelectMany(ig => ig
-                        .Elements(ns + "PackageReference")
-                        .Where(pr => pr.Attribute("Include") != null && (pr.Attribute("Include").Value.StartsWith("elmah.io", StringComparison.InvariantCultureIgnoreCase) || pr.Attribute("Include").Value.Equals("serilog.sinks.elmahio", StringComparison.InvariantCultureIgnoreCase)))))
+                var ns = document.Root?.GetDefaultNamespace();
+                if (ns != null)
                 {
-                    packages.Add(pr.Attribute("Include").Value.ToLower(), pr.Attribute("Version")?.Value);
+                    var project = document.Element(ns + "Project");
+                    if (project != null)
+                    {
+                        var itemGroups = project
+                            .Elements(ns + "ItemGroup")
+                            .ToList();
+
+                        foreach (var pr in itemGroups
+                            .SelectMany(ig => ig
+                                .Elements(ns + "PackageReference")
+                                .Where(pr => pr.Attribute("Include") != null
+                                    && (pr.Attribute("Include").Value.StartsWith("elmah.io", StringComparison.InvariantCultureIgnoreCase)
+                                        || pr.Attribute("Include").Value.Equals("serilog.sinks.elmahio", StringComparison.InvariantCultureIgnoreCase)))))
+                        {
+                            packages.Add(pr.Attribute("Include").Value.ToLower(), pr.Attribute("Version")?.Value);
+                        }
+                    }
                 }
             }
             else if (packageFile.Name.Equals("packages.config", StringComparison.InvariantCultureIgnoreCase))
@@ -162,5 +168,7 @@ namespace Elmah.Io.Cli
 
             return packages;
         }
+#pragma warning restore CS8604 // Possible null reference argument.
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
     }
 }

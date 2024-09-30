@@ -1,10 +1,6 @@
 ﻿using Elmah.Io.Client;
 using Spectre.Console;
-using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.Linq;
-using System.Threading;
 
 namespace Elmah.Io.Cli
 {
@@ -20,13 +16,15 @@ namespace Elmah.Io.Cli
             {
                 IsRequired = true
             };
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
             var logCommand = new Command("tail", "Tail log messages from a specified log")
             {
-                apiKeyOption, logIdOption
+                apiKeyOption, logIdOption, proxyHostOption, proxyPortOption
             };
-            logCommand.SetHandler(async (apiKey, logId) =>
+            logCommand.SetHandler(async (apiKey, logId, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 var from = DateTimeOffset.UtcNow;
                 var previous = new List<string>();
                 while (true)
@@ -37,7 +35,7 @@ namespace Elmah.Io.Cli
                         var now = DateTimeOffset.UtcNow;
                         var fiveSecondsBefore = from.AddSeconds(-5);
                         var result = await api.Messages.GetAllAsync(logId.ToString(), 0, 0, "*", fiveSecondsBefore, now, false);
-                        if (result?.Total.HasValue != true || result.Total.Value == 0)
+                        if (result == null || !result.Total.HasValue || result.Total.Value == 0)
                         {
                             from = now;
                             previous.Clear();
@@ -56,13 +54,14 @@ namespace Elmah.Io.Cli
 
                         previous.Clear();
 
-                        foreach (var message in messages?.OrderBy(msg => msg.DateTime.Value))
+                        foreach (var message in messages.OrderBy(msg => msg.DateTime ?? DateTimeOffset.MinValue))
                         {
                             var table = new Table();
+                            table.Border(TableBorder.None);
                             table.HideHeaders();
                             table.Expand = true;
                             table.AddColumns(new TableColumn("") { Width = 17 }, new TableColumn("") { Width = 9 }, new TableColumn(""));
-                            table.AddRow(message.DateTime.Value.ToLocalTime().ToString(), $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
+                            table.AddRow(message.DateTime?.ToLocalTime().ToString() ?? "Unknown date", $"{GetColor(message.Severity)}{message.Severity}[/]", message.Title);
                             AnsiConsole.Write(table);
                             previous.Add(message.Id);
                         }
@@ -71,10 +70,10 @@ namespace Elmah.Io.Cli
                     }
                     catch (Exception e)
                     {
-                        AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                        AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
                     }
                 }
-            }, apiKeyOption, logIdOption);
+            }, apiKeyOption, logIdOption, proxyHostOption, proxyPortOption);
 
             return logCommand;
         }

@@ -37,15 +37,18 @@ namespace Elmah.Io.Cli
             var versionOption = new Option<string>("--version", "Versions can be used to distinguish messages from different versions of your software. The value of version can be a SemVer compliant string or any other syntax that you are using as your version numbering scheme.");
             var correlationIdOption = new Option<string>("--correlationId", "CorrelationId can be used to group similar log messages together into a single discoverable batch. A correlation ID could be a session ID from ASP.NET Core, a unique string spanning multiple microsservices handling the same request, or similar.");
             var categoryOption = new Option<string>("--category", "The category to set on the message. Category can be used to emulate a logger name when created from a logging framework.");
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
 
             var logCommand = new Command("log", "Log a message to the specified log")
             {
                 apiKeyOption, logIdOption, applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption,
-                dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption
+                dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption,
+                proxyHostOption, proxyPortOption,
             };
-            logCommand.SetHandler(async (apiKey, logId, messageModel) =>
+            logCommand.SetHandler(async (apiKey, logId, messageModel, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 try
                 {
                     var message = await api.Messages.CreateAndNotifyAsync(logId, new CreateMessage
@@ -78,31 +81,31 @@ namespace Elmah.Io.Cli
                 }
                 catch (Exception e)
                 {
-                    AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                    AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
                 }
-            }, apiKeyOption, logIdOption, new MessageModelBinder(applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption, dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption));
+            }, apiKeyOption, logIdOption, new MessageModelBinder(applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption, dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption), proxyHostOption, proxyPortOption);
 
             return logCommand;
         }
 
-        private sealed class MessageModel
+        private sealed class MessageModel(string? title)
         {
-            public string Application { get; set; }
-            public string Detail { get; set; }
-            public string Hostname { get; set; }
-            public string Title { get; set; }
-            public string TitleTemplate { get; set; }
-            public string Source { get; set; }
+            public string? Application { get; set; }
+            public string? Detail { get; set; }
+            public string? Hostname { get; set; }
+            public string Title { get; set; } = title ?? throw new ArgumentNullException(nameof(title));
+            public string? TitleTemplate { get; set; }
+            public string? Source { get; set; }
             public int? StatusCode { get; set; }
             public DateTimeOffset? DateTime { get; set; }
-            public string Type { get; set; }
-            public string User { get; set; }
-            public string Severity { get; set; }
-            public string Url { get; set; }
-            public string Method { get; set; }
-            public string Version { get; set; }
-            public string CorrelationId { get; set; }
-            public string Category { get; set; }
+            public string? Type { get; set; }
+            public string? User { get; set; }
+            public string? Severity { get; set; }
+            public string? Url { get; set; }
+            public string? Method { get; set; }
+            public string? Version { get; set; }
+            public string? CorrelationId { get; set; }
+            public string? Category { get; set; }
         }
 
         private sealed class MessageModelBinder(Option<string> applicationOption, Option<string> detailOption, Option<string> hostnameOption, Option<string> titleOption, Option<string> titleTemplateOption, Option<string> sourceOption, Option<int> statusCodeOption, Option<DateTimeOffset?> dateTimeOption, Option<string> typeOption, Option<string> userOption, Option<string> severityOption, Option<string> urlOption, Option<string> methodOption, Option<string> versionOption, Option<string> correlationIdOption, Option<string> categoryOption) : BinderBase<MessageModel>
@@ -126,12 +129,11 @@ namespace Elmah.Io.Cli
 
             protected override MessageModel GetBoundValue(BindingContext bindingContext)
             {
-                return new MessageModel
+                return new MessageModel(bindingContext.ParseResult.GetValueForOption(titleOption))
                 {
                     Application = bindingContext.ParseResult.GetValueForOption(applicationOption),
                     Detail = bindingContext.ParseResult.GetValueForOption(detailOption),
                     Hostname = bindingContext.ParseResult.GetValueForOption(hostnameOption),
-                    Title = bindingContext.ParseResult.GetValueForOption(titleOption),
                     TitleTemplate = bindingContext.ParseResult.GetValueForOption(titleTemplateOption),
                     Source = bindingContext.ParseResult.GetValueForOption(sourceOption),
                     StatusCode = bindingContext.ParseResult.GetValueForOption(statusCodeOption),

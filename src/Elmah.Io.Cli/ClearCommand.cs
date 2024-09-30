@@ -22,13 +22,15 @@ namespace Elmah.Io.Cli
             };
             var fromOption = new Option<DateTimeOffset?>("--from", "Optional date and time to clear messages from");
             var toOption = new Option<DateTimeOffset?>("--to", "Optional date and time to clear messages to");
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
             var clearCommand = new Command("clear", "Delete one or more messages from a log")
             {
-                apiKeyOption, logIdOption, queryOption, fromOption, toOption
+                apiKeyOption, logIdOption, queryOption, fromOption, toOption, proxyHostOption, proxyPortOption
             };
-            clearCommand.SetHandler(async (apiKey, logId, query, from, to) =>
+            clearCommand.SetHandler(async (apiKey, logId, query, from, to, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 try
                 {
                     await api.Messages.DeleteAllAsync(logId.ToString(), new Client.Search
@@ -42,9 +44,9 @@ namespace Elmah.Io.Cli
                 }
                 catch (Exception e)
                 {
-                    AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                    AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
                 }
-            }, apiKeyOption, logIdOption, queryOption, fromOption, toOption);
+            }, apiKeyOption, logIdOption, queryOption, fromOption, toOption, proxyHostOption, proxyPortOption);
 
             return clearCommand;
         }

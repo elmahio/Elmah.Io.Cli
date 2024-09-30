@@ -42,13 +42,15 @@ namespace Elmah.Io.Cli
             };
             var dateFromOption = new Option<DateTimeOffset?>("--dateFrom", $"Defines the Date from which the logs start. Ex. \" --dateFrom {aWeekAgo:yyyy-MM-dd}\"");
             var dateToOption = new Option<DateTimeOffset?>("--dateTo", $"Defines the Date from which the logs end. Ex. \" --dateTo {today:yyyy-MM-dd}\"");
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
             var importCommand = new Command("import", "Import log messages to a specified log")
             {
-                apiKeyOption, logIdOption, typeOption, filenameOption, dateFromOption, dateToOption
+                apiKeyOption, logIdOption, typeOption, filenameOption, dateFromOption, dateToOption, proxyHostOption, proxyPortOption
             };
-            importCommand.SetHandler(async (apiKey, logId, logFileType, filename, dateFrom, dateTo) =>
+            importCommand.SetHandler(async (apiKey, logId, logFileType, filename, dateFrom, dateTo, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 try
                 {
                     var filenameFileInfo = new FileInfo(filename);
@@ -79,9 +81,9 @@ namespace Elmah.Io.Cli
                 }
                 catch (Exception e)
                 {
-                    AnsiConsole.MarkupLine($"[red]{e.Message}[/]");
+                    AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
                 }
-            }, apiKeyOption, logIdOption, typeOption, filenameOption, dateFromOption, dateToOption);
+            }, apiKeyOption, logIdOption, typeOption, filenameOption, dateFromOption, dateToOption, proxyHostOption, proxyPortOption);
 
             return importCommand;
         }

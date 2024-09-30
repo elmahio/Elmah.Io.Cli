@@ -1,7 +1,5 @@
 ﻿using Spectre.Console;
-using System;
 using System.CommandLine;
-using System.IO;
 
 namespace Elmah.Io.Cli
 {
@@ -29,16 +27,18 @@ namespace Elmah.Io.Cli
             {
                 IsRequired = true,
             };
+            var proxyHostOption = ProxyHostOption();
+            var proxyPortOption = ProxyPortOption();
             var sourceMapCommand = new Command("sourcemap", "Upload a source map and minified JavaScript")
             {
-                apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption
+                apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption, proxyHostOption, proxyPortOption
             };
-            sourceMapCommand.SetHandler(async (apiKey, logId, path, sourceMap, minifiedJavaScript) =>
+            sourceMapCommand.SetHandler(async (apiKey, logId, path, sourceMap, minifiedJavaScript, host, port) =>
             {
-                var api = Api(apiKey);
+                var api = Api(apiKey, host, port);
                 try
                 {
-                    if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out Uri uri))
+                    if (!Uri.TryCreate(path, UriKind.RelativeOrAbsolute, out Uri? uri))
                     {
                         AnsiConsole.MarkupLine($"[red]Unknown URL: {path}[/]");
                         return;
@@ -73,9 +73,9 @@ namespace Elmah.Io.Cli
                 }
                 catch (Exception e)
                 {
-                    AnsiConsole.WriteException(e);
+                    AnsiConsole.MarkupLineInterpolated($"[red]{e.Message}[/]");
                 }
-            }, apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption);
+            }, apiKeyOption, logIdOption, pathOption, sourceMapOption, minifiedJavaScriptOption, proxyHostOption, proxyPortOption);
 
             return sourceMapCommand;
         }
