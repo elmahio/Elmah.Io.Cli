@@ -1,5 +1,4 @@
 ﻿using Spectre.Console;
-using System;
 using System.CommandLine;
 
 namespace Elmah.Io.Cli

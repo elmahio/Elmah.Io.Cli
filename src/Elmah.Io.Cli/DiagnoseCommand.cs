@@ -120,7 +120,6 @@ namespace Elmah.Io.Cli
         }
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
-#pragma warning disable CS8604 // Possible null reference argument.
         private static Dictionary<string, string?> FindPackages(FileInfo packageFile, bool verbose)
         {
             var document = XDocument.Load(packageFile.FullName);
@@ -168,7 +167,6 @@ namespace Elmah.Io.Cli
 
             return packages;
         }
-#pragma warning restore CS8604 // Possible null reference argument.
 #pragma warning restore CS8602 // Dereference of a possibly null reference.
     }
 }

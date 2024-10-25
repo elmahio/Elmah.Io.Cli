@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.CommandLine;
+﻿using System.CommandLine;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Elmah.Io.Client;
 using Spectre.Console;
 using Tx.Windows;
@@ -216,7 +211,7 @@ namespace Elmah.Io.Cli
             var messages = new List<CreateMessage>();
             while (!streamReader.EndOfStream)
             {
-                var line = streamReader.ReadLine();
+                var line = await streamReader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 var columns = line.Split(',');

@@ -1,6 +1,4 @@
 ﻿using Spectre.Console;
-using System.Collections.Generic;
-using System.IO;
 
 namespace Elmah.Io.Cli.Diagnose
 {

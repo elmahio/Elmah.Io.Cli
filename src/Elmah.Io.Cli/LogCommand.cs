@@ -1,6 +1,5 @@
 ﻿using Elmah.Io.Client;
 using Spectre.Console;
-using System;
 using System.CommandLine;
 using System.CommandLine.Binding;
 
