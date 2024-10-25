@@ -83,6 +83,12 @@ namespace Elmah.Io.Cli.Diagnose
             FoundError = true;
         }
 
+        protected static void ReportWarning(string message)
+        {
+            // Warning takes up more width so add two spaces after that emoji
+            AnsiConsole.MarkupLine($"[yellow]:warning:  {message}[/]");
+        }
+
         protected static void ValidateXmlAgainstSchema(string fileName, string fileContent, bool verbose, params (string targetNamespace, string schemaUrl)[] schemaUrls)
         {
             if (string.IsNullOrWhiteSpace(fileContent))

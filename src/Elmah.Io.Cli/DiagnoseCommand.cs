@@ -1,4 +1,5 @@
 ﻿using Elmah.Io.Cli.Diagnose;
+using GuerrillaNtp;
 using Spectre.Console;
 using System.CommandLine;
 using System.Xml.Linq;
@@ -26,6 +27,8 @@ namespace Elmah.Io.Cli
                     AnsiConsole.MarkupLine($"[red]Unknown directory: [/][grey]{directory ?? "Not specified"}[/]");
                     return;
                 }
+
+                DiagnoseClock();
 
                 AnsiConsole.MarkupLine($"Running diagnose in [grey]{directory}[/]");
 
@@ -117,6 +120,19 @@ namespace Elmah.Io.Cli
             }, directoryOption, verboseOption);
 
             return diagnoseCommand;
+        }
+
+        private static void DiagnoseClock()
+        {
+            var ntpClient = NtpClient.Default;
+            var ntpClock = ntpClient.Query();
+            var ntpUtcNow = ntpClock.UtcNow;
+            var utcNow = DateTime.UtcNow;
+            var difference = (int)Math.Abs((ntpUtcNow - utcNow).TotalSeconds);
+            if (difference > 30)
+            {
+                ReportWarning($"The system clock is off by {difference} seconds. If you log from this machine the timestamp put on log messages is logged as past or future values. Log messages with future timestamps won't show up in the UI until that time.");
+            }
         }
 
 #pragma warning disable CS8602 // Dereference of a possibly null reference.
