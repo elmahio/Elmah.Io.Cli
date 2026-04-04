@@ -25,6 +25,9 @@ jobs:
     - name: Check vulnerable NuGet packages
       uses: elmahio/github-check-vulnerable-nuget-packages-action@v1
 
+    - name: Pack .NET Core tool
+      run: dotnet pack -c Release src/Elmah.Io.Cli/Elmah.Io.Cli.csproj /p:Version=5.3.${{ github.run_number }}
+
     - name: Build win-x64
       run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime win-x64 --self-contained -o elmahio-win-x64 /p:AssemblyVersion=5.3.${{ github.run_number }}
 
@@ -36,9 +39,6 @@ jobs:
 
     - name: Build osx-arm64
       run: dotnet publish src/Elmah.Io.Cli/Elmah.Io.Cli.csproj -c Release --runtime osx-arm64 --self-contained -o elmahio-osx-arm64 /p:AssemblyVersion=5.3.${{ github.run_number }}
-
-    - name: Pack .NET Core tool
-      run: dotnet pack -c Release src/Elmah.Io.Cli/Elmah.Io.Cli.csproj /p:Version=5.3.${{ github.run_number }}
 
     - name: Pack executables
       shell: bash
@@ -69,5 +69,5 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push to nuget.org
-      run: dotnet nuget push "src/Elmah.Io.Cli/nupkg/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push "src/Elmah.Io.Cli/nupkg/Elmah.Io.Cli.5.3.${{ github.run_number }}.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
       if: ${{ github.event_name == 'push' }}
