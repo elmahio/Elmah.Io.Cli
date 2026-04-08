@@ -39,7 +39,7 @@ namespace Elmah.Io.Cli
             var proxyHostOption = ProxyHostOption();
             var proxyPortOption = ProxyPortOption();
 
-            var logCommand = new Command("log", $"{(deprecated ? "(deprecated) " : "")}Log a message to the specified log")
+            var logCommand = new Command(deprecated ? "log" : "create", $"{(deprecated ? "(deprecated) " : "")}Log a message to the specified log")
             {
                 apiKeyOption, logIdOption, applicationOption, detailOption, hostnameOption, titleOption, titleTemplateOption, sourceOption, statusCodeOption,
                 dateTimeOption, typeOption, userOption, severityOption, urlOption, methodOption, versionOption, correlationIdOption, categoryOption,
@@ -48,7 +48,7 @@ namespace Elmah.Io.Cli
             logCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio log' is deprecated. Use 'elmahio messages log' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio log' is deprecated. Use 'elmahio messages create' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

@@ -14,10 +14,10 @@ namespace Elmah.Io.Cli
             var messagesCommand = new Command("messages", "Work with log messages")
             {
                 CreateCountSubcommand(),
+                LogCommand.CreateSubcommand(),
                 CreateGetSubcommand(),
                 CreateListFrequentSubcommand(),
                 CreateListRecentSubcommand(),
-                LogCommand.CreateSubcommand(),
             };
 
             return messagesCommand;
