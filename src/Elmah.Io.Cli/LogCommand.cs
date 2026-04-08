@@ -48,7 +48,7 @@ namespace Elmah.Io.Cli
             logCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio log' is deprecated. Use 'elmahio messages log' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio log' is deprecated. Use 'elmahio messages log' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

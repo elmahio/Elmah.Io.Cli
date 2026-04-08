@@ -38,7 +38,7 @@ namespace Elmah.Io.Cli
             logCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio tail' is deprecated. Use 'elmahio logs tail' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio tail' is deprecated. Use 'elmahio logs tail' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

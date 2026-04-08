@@ -41,7 +41,7 @@ namespace Elmah.Io.Cli
             exportCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio export' is deprecated. Use 'elmahio logs export' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio export' is deprecated. Use 'elmahio logs export' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

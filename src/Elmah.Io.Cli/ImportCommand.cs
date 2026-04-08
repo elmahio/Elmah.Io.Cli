@@ -44,7 +44,7 @@ namespace Elmah.Io.Cli
             importCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio import' is deprecated. Use 'elmahio logs import' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio import' is deprecated. Use 'elmahio logs import' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

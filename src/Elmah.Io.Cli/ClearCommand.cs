@@ -31,7 +31,7 @@ namespace Elmah.Io.Cli
             clearCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio clear' is deprecated. Use 'elmahio logs clear' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio clear' is deprecated. Use 'elmahio logs clear' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

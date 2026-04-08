@@ -22,7 +22,7 @@ namespace Elmah.Io.Cli
             };
             deploymentCommand.SetAction(async result =>
             {
-                AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio deployment' is deprecated. Use 'elmahio deployments create' instead.");
+                AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio deployment' is deprecated. Use 'elmahio deployments create' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var version = result.GetValue(versionOption);

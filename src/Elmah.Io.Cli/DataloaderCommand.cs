@@ -39,7 +39,7 @@ namespace Elmah.Io.Cli
             dataloaderCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:light_bulb:  Warning:[/] 'elmahio dataloader' is deprecated. Use 'elmahio logs dataloader' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio dataloader' is deprecated. Use 'elmahio logs dataloader' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);

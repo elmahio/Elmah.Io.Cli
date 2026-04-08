@@ -31,7 +31,7 @@ namespace Elmah.Io.Cli
             sourceMapCommand.SetAction(async result =>
             {
                 if (deprecated)
-                    AnsiConsole.MarkupLine("[yellow]:warning:  Warning:[/] 'elmahio sourcemap' is deprecated. Use 'elmahio logs sourcemap' instead.");
+                    AnsiConsole.MarkupLine("[yellow]Warning:[/] 'elmahio sourcemap' is deprecated. Use 'elmahio logs sourcemap' instead.");
 
                 var apiKey = result.GetValue(apiKeyOption);
                 var logId = result.GetValue(logIdOption);
