@@ -14,8 +14,6 @@ From inside Claude Code:
 /plugin install elmahio@elmahio
 ```
 
-(While the upstream PR is in flight, install from the fork instead: `/plugin marketplace add jasonnissen/Elmah.Io.Cli`.)
-
 The first time Claude calls an MCP tool, the elmah.io OAuth flow opens in your browser. After approval, both the skill and the MCP tools are active.
 
 ## Already configured the elmah.io MCP server manually?
