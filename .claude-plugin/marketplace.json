@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "elmahio",
+  "owner": {
+    "name": "elmah.io",
+    "url": "https://elmah.io"
+  },
+  "metadata": {
+    "description": "Claude Code plugin for the Elmah.Io CLI and elmah.io MCP server.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "elmahio",
+      "description": "Use Elmah.Io.Cli (binary: elmahio) to query log messages, create deployments, tail logs, upload source maps, and diagnose elmah.io installations — plus the elmah.io MCP server for in-conversation API access.",
+      "source": "./plugins/elmahio"
+    }
+  ]
+}

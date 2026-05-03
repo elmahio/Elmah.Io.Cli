@@ -20,6 +20,7 @@ namespace Elmah.Io.Cli
                 DiagnoseCommand.Create(),
                 LogsCommand.Create(),
                 MessagesCommand.Create(),
+                SkillCommand.Create(),
                 // Deprecated commands
                 ClearCommand.Create(),
                 DataloaderCommand.Create(),

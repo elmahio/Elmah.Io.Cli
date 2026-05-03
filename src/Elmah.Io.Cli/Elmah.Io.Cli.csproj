@@ -42,4 +42,8 @@
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\plugins\elmahio\skills\elmahio\SKILL.md" Link="Resources\SKILL.md" LogicalName="Elmah.Io.Cli.Resources.SKILL.md" />
+  </ItemGroup>
+
 </Project>

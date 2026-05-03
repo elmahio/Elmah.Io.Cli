@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "elmahio",
+  "version": "1.0.0",
+  "description": "Drive the Elmah.Io CLI and the elmah.io MCP server from Claude Code.",
+  "author": {
+    "name": "elmah.io",
+    "url": "https://elmah.io"
+  },
+  "homepage": "https://docs.elmah.io/cli-overview/",
+  "repository": "https://github.com/elmahio/Elmah.Io.Cli",
+  "license": "Apache-2.0",
+  "keywords": [
+    "elmah.io",
+    "error-logging",
+    "observability",
+    "dotnet",
+    "cli",
+    "mcp",
+    "diagnostics"
+  ],
+  "mcpServers": {
+    "elmahio": {
+      "type": "http",
+      "url": "https://mcp.elmah.io/mcp",
+      "oauth": {
+        "clientId": "claudecode"
+      }
+    }
+  }
+}
