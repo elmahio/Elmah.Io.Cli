@@ -38,21 +38,20 @@ namespace Elmah.Io.Cli
         {
             Directory.CreateDirectory(CredentialsDir);
             var json = JsonConvert.SerializeObject(new { apiKey }, Formatting.Indented);
-            File.WriteAllText(CredentialsFile, json);
 
-            // Restrict file permissions to owner-only on Unix
+            var options = new FileStreamOptions
+            {
+                Mode = FileMode.Create,
+                Access = FileAccess.Write,
+            };
             if (!OperatingSystem.IsWindows())
             {
-                try
-                {
-                    File.SetUnixFileMode(CredentialsFile,
-                        UnixFileMode.UserRead | UnixFileMode.UserWrite);
-                }
-                catch
-                {
-                    // Best-effort; non-fatal if filesystem doesn't support it
-                }
+                options.UnixCreateMode = UnixFileMode.UserRead | UnixFileMode.UserWrite;
             }
+
+            using var stream = new FileStream(CredentialsFile, options);
+            using var writer = new StreamWriter(stream);
+            writer.Write(json);
         }
 
         public static void Clear()
