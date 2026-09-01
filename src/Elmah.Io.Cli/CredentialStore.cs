@@ -11,9 +11,14 @@ namespace Elmah.Io.Cli
         private static readonly string CredentialsFile =
             Path.Combine(CredentialsDir, "credentials.json");
 
+        public const string ApiKeyEnvironmentVariable = "ELMAHIO_API_KEY";
+
         public static string? GetApiKey(string? provided = null)
         {
             if (!string.IsNullOrWhiteSpace(provided)) return provided;
+
+            var fromEnvironment = Environment.GetEnvironmentVariable(ApiKeyEnvironmentVariable);
+            if (!string.IsNullOrWhiteSpace(fromEnvironment)) return fromEnvironment;
 
             try
             {

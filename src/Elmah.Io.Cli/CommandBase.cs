@@ -29,13 +29,13 @@ namespace Elmah.Io.Cli
         }
 
         protected static Option<string?> ApiKeyOption() =>
-            new("--apiKey") { Description = "An API key with permission to execute the command. If omitted, the key stored via 'elmahio login' is used." };
+            new("--apiKey") { Description = $"An API key with permission to execute the command. If omitted, the {CredentialStore.ApiKeyEnvironmentVariable} environment variable is used, falling back to the key stored via 'elmahio login'." };
 
         protected static string? ResolveApiKey(string? provided)
         {
             var key = CredentialStore.GetApiKey(provided);
             if (key == null)
-                AnsiConsole.MarkupLine("[red]No API key provided. Pass --apiKey or run 'elmahio login' first.[/]");
+                AnsiConsole.MarkupLine($"[red]No API key provided. Pass --apiKey, set {CredentialStore.ApiKeyEnvironmentVariable}, or run 'elmahio login' first.[/]");
             return key;
         }
 
