@@ -1,0 +1,88 @@
+name: Plugin lint
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.claude-plugin/**'
+      - 'plugins/**'
+      - 'src/Elmah.Io.Cli/**'
+      - '.github/workflows/plugin-lint.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.claude-plugin/**'
+      - 'plugins/**'
+      - 'src/Elmah.Io.Cli/**'
+      - '.github/workflows/plugin-lint.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate JSON manifests parse
+        run: |
+          jq empty .claude-plugin/marketplace.json
+          jq empty plugins/elmahio/.claude-plugin/plugin.json
+
+      - name: Verify marketplace points at the plugin source
+        run: |
+          src=$(jq -r '.plugins[0].source' .claude-plugin/marketplace.json)
+          test -d ".claude-plugin/${src#./}" || test -d "${src#./}" || {
+            echo "Plugin source path '$src' from marketplace.json does not exist"
+            exit 1
+          }
+
+      - name: Verify SKILL.md frontmatter
+        run: |
+          head -1 plugins/elmahio/skills/elmahio/SKILL.md | grep -q '^---$' \
+            || { echo "SKILL.md is missing YAML frontmatter"; exit 1; }
+          grep -q '^name: elmahio$' plugins/elmahio/skills/elmahio/SKILL.md \
+            || { echo "SKILL.md frontmatter must declare name: elmahio"; exit 1; }
+          grep -q '^description:' plugins/elmahio/skills/elmahio/SKILL.md \
+            || { echo "SKILL.md frontmatter must declare a description"; exit 1; }
+
+      - name: Verify SKILL.md covers every CLI command group
+        run: |
+          missing=0
+          for cmd in login logout diagnose messages deployments logs; do
+            if ! grep -q "elmahio ${cmd}" plugins/elmahio/skills/elmahio/SKILL.md; then
+              echo "SKILL.md does not mention 'elmahio ${cmd}' — likely out of date"
+              missing=1
+            fi
+          done
+          for sub in "messages count" "messages get" "messages list-recent" "messages list-frequent" \
+                     "deployments create" "deployments list" \
+                     "logs list" "logs get" "logs clear" "logs dataloader" "logs export" "logs import" "logs sourcemap" "logs tail"; do
+            if ! grep -q "elmahio ${sub}" plugins/elmahio/skills/elmahio/SKILL.md; then
+              echo "SKILL.md does not mention 'elmahio ${sub}' — likely out of date"
+              missing=1
+            fi
+          done
+          if [ $missing -ne 0 ]; then
+            echo "Update plugins/elmahio/skills/elmahio/SKILL.md to cover all CLI commands."
+            exit 1
+          fi
+
+      - name: Verify SKILL.md is in sync with the embedded copy
+        run: |
+          # The CLI's `elmahio skill install` command embeds plugins/elmahio/skills/elmahio/SKILL.md
+          # via a csproj <EmbeddedResource Include="..\..\plugins\..."> link, so the source-of-truth
+          # check is just that the file exists at the linked path.
+          test -f plugins/elmahio/skills/elmahio/SKILL.md \
+            || { echo "Plugin SKILL.md missing — csproj EmbeddedResource link will fail"; exit 1; }
+
+      - name: Verify CLI command tree mentions every group from SKILL.md
+        shell: bash
+        run: |
+          missing=0
+          for class in MessagesCommand DeploymentsCommand DiagnoseCommand LogsCommand SkillCommand; do
+            if ! grep -q "${class}.Create()" src/Elmah.Io.Cli/Program.cs; then
+              echo "Program.cs does not register ${class} — SKILL.md may be ahead of the code"
+              missing=1
+            fi
+          done
+          if [ $missing -ne 0 ]; then exit 1; fi
